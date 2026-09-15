@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>সিলেবাস ব্যবস্থাপনা — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 650px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Topbar ===== */
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; margin-bottom: 24px; }
+  
+  /* ===== Premium Buttons ===== */
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.15); border-radius: 12px;
+    color: var(--text-primary); padding: 10px 16px; font-weight: 800; font-size: 0.9rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;
+  }
+  .btn-glass:hover { background: rgba(128, 128, 128, 0.1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+  .btn-glass:active { transform: translateY(0) scale(0.96); }
+  
+  .btn-primary { 
+    background: linear-gradient(135deg, var(--color-accent), #f59e0b); 
+    color: #fff; border: none; 
+    box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.3); 
+  }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4); transform: translateY(-2px); }
+
+  /* ===== Page Header & Search ===== */
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+  .page-header p { font-size: 0.9rem; color: var(--text-muted); margin: 0; font-weight: 600; }
+
+  /* ===== Batch Filters (Chips) ===== */
+  .batch-filters { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0 16px; scrollbar-width: none; margin-bottom: 12px; }
+  .batch-filters::-webkit-scrollbar { display: none; }
+  .chip {
+    padding: 8px 18px; border-radius: 99px; font-size: 0.85rem; font-weight: 800;
+    background: rgba(128, 128, 128, 0.05); border: 1px solid rgba(128, 128, 128, 0.15);
+    color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
+  }
+  .chip:hover { background: rgba(128, 128, 128, 0.1); }
+  .chip.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.3); transform: scale(1.05); }
+
+  /* ===== Live Search Box ===== */
+  .search-box {
+    display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.03);
+    border: 1px solid var(--surface-border); border-radius: 14px; padding: 12px 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 24px; transition: all 0.3s;
+  }
+  .search-box:focus-within { border-color: var(--color-accent); box-shadow: 0 4px 16px rgba(var(--color-accent-rgb),0.15); background: var(--surface); }
+  .search-box input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
+
+  /* ===== Tree View Styles ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 16px;
+  }
+  .batch-title { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 1.1rem; font-weight: 900; color: var(--color-accent); margin-bottom: 16px; }
+  
+  .subject-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 14px; margin-bottom: 12px; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+  .subject-box:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.03); transform: translateY(-2px); }
+  
+  .subject-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; cursor: pointer; }
+  .subject-name { font-size: 1rem; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+  .subject-meta { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; margin-top: 4px; }
+  
+  .topic-list { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--surface-border); display: none; }
+  .topic-list.open { display: block; animation: slideDown 0.2s ease-out; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .topic-item { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 12px; background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.06); border-radius: 12px; margin-bottom: 8px; }
+  .topic-name { font-size: 0.9rem; font-weight: 800; color: var(--text-secondary); line-height: 1.4; }
+  .sub-badge { background: rgba(128,128,128,0.1); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-left: 6px; display: inline-block; margin-top: 4px; }
+
+  /* ===== Premium Action Icons ===== */
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.06); color: var(--text-secondary); border: 1px solid rgba(128,128,128,0.1); cursor: pointer; transition: all 0.2s ease; flex-shrink:0; }
+  .icon-btn:hover { background: var(--surface); color: var(--color-accent); border-color: var(--color-accent); box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.15); transform: translateY(-2px); }
+  .icon-btn.delete:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
+  .icon-btn:active { transform: scale(0.94); }
+  
+  .inactive-badge { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; font-size: 0.7rem; padding: 3px 8px; border-radius: 6px; font-weight: 900; margin-left: 8px; }
+
+  /* ===== Wizard Modal Styles ===== */
+  .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fadeInOverlay 0.2s ease; }
+  .custom-modal { width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); animation: slideUpModal 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  
+  @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUpModal { from { transform: translateY(30px) scale(0.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+  
+  .modal-title { font-size: 1.2rem; font-weight: 900; color: var(--text-primary); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  
+  .wiz-step { display: none; animation: fadeIn 0.3s ease; }
+  .wiz-step.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+  
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.95rem; font-weight: 900; color: var(--text-secondary); margin-bottom: 10px; }
+  .input-glass { width: 100%; box-sizing: border-box; padding: 14px 16px; background: rgba(128, 128, 128, 0.04); border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text-primary); font-family: inherit; font-size: 0.95rem; font-weight: 700; outline: none; transition: all 0.2s; }
+  .input-glass:focus { border-color: var(--color-accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); }
+  select.input-glass { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; }
+  
+  .wiz-footer { display: flex; gap: 10px; margin-top: 28px; }
+  .step-indicator { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
+  .step-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(128,128,128,0.2); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  .step-dot.active { background: var(--color-accent); width: 24px; border-radius: 6px; box-shadow: 0 2px 8px rgba(var(--color-accent-rgb), 0.3); }
+
+  /* Dynamic Topic Rows (Mobile Friendly) */
+  .topic-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; background: rgba(128,128,128,0.02); padding: 12px; border-radius: 14px; border: 1px dashed rgba(128,128,128,0.15); }
+  .topic-row .input-wrapper { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .topic-row .input-glass { padding: 10px 14px; font-size: 0.85rem; }
+  .remove-row-btn { background: rgba(239,68,68,0.1); color: #ef4444; border-radius: 12px; width: 44px; height: 44px; border: 1px solid rgba(239,68,68,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+  .remove-row-btn:hover { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.2); transform: scale(1.05); }
+  .remove-row-btn:active { transform: scale(0.95); }
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<!-- Step-by-Step Wizard Modal -->
+<div id="wizardModal" class="modal-overlay" style="display:none;">
+  <div class="custom-modal">
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      নতুন সিলেবাস যোগ করুন
+    </div>
+    
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+    </div>
+
+    <!-- Step 1: Batch -->
+    <div id="step1" class="wiz-step active">
+      <div class="field">
+        <label>১. ব্যাচ নির্বাচন করুন</label>
+        <select id="wzBatch" class="input-glass">
+          <option value="" disabled selected>ব্যাচ বেছে নিন...</option>
+          <option value="Batch 6">Batch 6</option>
+          <option value="Batch 7">Batch 7</option>
+          <option value="Batch 8">Batch 8</option>
+          <option value="Batch 9">Batch 9</option>
+          <option value="Batch 10">Batch 10</option>
+          <option value="Batch 11">Batch 11</option>
+          <option value="Batch 12">Batch 12</option>
+          <option value="Other">অন্যান্য</option>
+        </select>
+      </div>
+      <div class="field hidden" id="wzCustomBatchField" style="display:none; margin-top:12px;">
+        <input type="text" id="wzCustomBatch" class="input-glass" placeholder="নতুন ব্যাচের নাম লিখুন">
+      </div>
+      <div class="wiz-footer">
+        <button class="btn-glass close-wiz" style="flex:1;">বাতিল</button>
+        <button class="btn-glass btn-primary" onclick="nextStep(2)" style="flex:1;">পরবর্তী ধাপ</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Subject -->
+    <div id="step2" class="wiz-step">
+      <div class="field">
+        <label>২. বিষয়ের নাম</label>
+        <input type="text" id="wzSubject" class="input-glass" placeholder="যেমন: ইতিহাস, ভৌতবিজ্ঞান...">
+      </div>
+      <div class="wiz-footer">
+        <button class="btn-glass" onclick="nextStep(1)" style="flex:1;">পেছনে</button>
+        <button class="btn-glass btn-primary" onclick="nextStep(3)" style="flex:1;">পরবর্তী ধাপ</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Topics & Subtopics -->
+    <div id="step3" class="wiz-step">
+      <div class="field">
+        <label>৩. টপিক ও সাব-টপিক (ঐচ্ছিক)</label>
+        <p class="text-xs text-muted mb-3" style="line-height:1.5; font-weight:600;">খালি রাখলে বিষয়ের নামেই স্বয়ংক্রিয়ভাবে একটি টপিক তৈরি হবে। সাব-টপিক না দিলে শুধু টপিকের নাম বসবে।</p>
+        
+        <div id="dynamicTopicsContainer">
+          <!-- JS will inject rows here -->
+        </div>
+
+        <button class="btn-glass" id="addTopicRowBtn" style="width:100%; border:2px dashed rgba(128,128,128,0.2); background:rgba(128,128,128,0.02); margin-top:12px; padding:12px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          আরও টপিক যোগ করুন
+        </button>
+      </div>
+      <div class="wiz-footer">
+        <button class="btn-glass" onclick="nextStep(2)" style="flex:1;">পেছনে</button>
+        <button class="btn-glass btn-primary" id="saveWizardBtn" style="flex:1;">তৈরি করুন</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import {
+  getFullSyllabusTree, addSubject, updateSubject, setSubjectActive,
+  addChapter, updateChapter, setChapterActive,
+  addTopic, updateTopic, setTopicActive
+} from "../js/utils/syllabus-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let tree = [];
+let searchTerm = "";
+let activeBatchFilter = "all";
+let openSubjects = new Set(); 
+
+window.nextStep = function(step) {
+  if (step === 2) {
+    const batchSelect = document.getElementById("wzBatch").value;
+    const customBatch = document.getElementById("wzCustomBatch").value.trim();
+    if(!batchSelect) { showToast("দয়া করে ব্যাচ নির্বাচন করুন", "error"); return; }
+    if(batchSelect === "Other" && !customBatch) { showToast("নতুন ব্যাচের নাম লিখুন", "error"); return; }
+  }
+  if (step === 3) {
+    if(!document.getElementById("wzSubject").value.trim()) { showToast("বিষয়ের নাম লিখতে হবে", "error"); return; }
+    if(document.getElementById("dynamicTopicsContainer").children.length === 0) {
+      addTopicRow();
+    }
+  }
+  
+  document.querySelectorAll('.wiz-step').forEach(el => el.classList.remove('active'));
+  document.getElementById(`step${step}`).classList.add('active');
+  
+  document.querySelectorAll('.step-dot').forEach((el, idx) => {
+    if(idx < step) el.classList.add('active'); else el.classList.remove('active');
+  });
+};
+
+document.addEventListener("change", (e) => {
+  if (e.target.id === "wzBatch") {
+    document.getElementById("wzCustomBatchField").style.display = e.target.value === "Other" ? "block" : "none";
+  }
+});
+
+function addTopicRow() {
+  const container = document.getElementById("dynamicTopicsContainer");
+  const row = document.createElement("div");
+  row.className = "topic-row";
+  row.innerHTML = `
+    <div class="input-wrapper">
+      <input type="text" class="input-glass t-val" placeholder="টপিক (যেমন: কোষ)">
+      <input type="text" class="input-glass st-val" placeholder="সাব-টপিক (ঐচ্ছিক)">
+    </div>
+    <button class="remove-row-btn" onclick="this.parentElement.remove()" title="মুছে ফেলুন">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  `;
+  container.appendChild(row);
+}
+document.getElementById("addTopicRowBtn").addEventListener("click", addTopicRow);
+
+requireAdmin(() => {
+  shell.innerHTML = `
+    <!-- Topbar -->
+    <div class="top-nav">
+      <a href="../admin/dashboard.html" class="btn-glass" style="width:44px; height:44px; padding:0; border-radius:14px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </a>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-glass" id="guideBtn" style="border-radius:99px; padding:10px 18px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          গাইড
+        </button>
+      </div>
+    </div>
+
+    <!-- Header & Button -->
+    <div class="page-header">
+      <h1>সিলেবাস ও ব্যাচ</h1>
+      <p>পরীক্ষার অধ্যায় এবং টপিক তৈরি করুন</p>
+    </div>
+    
+    <button class="btn-glass btn-primary" id="openWizardBtn" style="width:100%; padding:16px; font-size:1.05rem; margin-bottom:24px; border-radius:16px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      নতুন সিলেবাস যোগ করুন
+    </button>
+
+    <!-- Batch Filters (Chips) -->
+    <div class="batch-filters" id="batchFilters"></div>
+
+    <!-- Live Search Box -->
+    <div class="search-box">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="বিষয় বা টপিক খুঁজুন...">
+    </div>
+
+    <!-- Tree View -->
+    <div id="syllabusTree"></div>
+  `;
+
+  document.getElementById("openWizardBtn").addEventListener("click", () => {
+    window.nextStep(1);
+    document.getElementById("wzBatch").value = "";
+    document.getElementById("wzCustomBatch").value = "";
+    document.getElementById("wzCustomBatchField").style.display = "none";
+    document.getElementById("wzSubject").value = "";
+    document.getElementById("dynamicTopicsContainer").innerHTML = ""; 
+    document.getElementById("wizardModal").style.display = "flex";
+  });
+  
+  document.querySelectorAll(".close-wiz").forEach(btn => {
+    btn.addEventListener("click", () => document.getElementById("wizardModal").style.display = "none");
+  });
+  
+  document.getElementById("saveWizardBtn").addEventListener("click", handleCreateWizard);
+
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    renderTree();
+  });
+
+  loadTree();
+});
+
+async function loadTree() {
+  const el = document.getElementById("syllabusTree");
+  try {
+    tree = await getFullSyllabusTree();
+    renderTree();
+  } catch (err) {
+    el.innerHTML = `<div class="glass-card text-center" style="color:#ef4444; font-weight:800;">সিলেবাস লোড করা যায়নি।</div>`;
+  }
+}
+
+function renderTree() {
+  const filterEl = document.getElementById("batchFilters");
+  const treeEl = document.getElementById("syllabusTree");
+
+  const batches = [...new Set(tree.map(s => s.name_bn))].sort();
+
+  filterEl.innerHTML = `
+    <div class="chip ${activeBatchFilter === "all" ? "active" : ""}" data-batch="all">সব ব্যাচ</div>
+    ${batches.map(b => `<div class="chip ${activeBatchFilter === b ? "active" : ""}" data-batch="${b}">${b}</div>`).join("")}
+  `;
+  filterEl.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      activeBatchFilter = chip.dataset.batch;
+      searchTerm = ""; 
+      const sInput = document.getElementById("searchInput");
+      if(sInput) sInput.value = "";
+      renderTree();
+    });
+  });
+
+  let filteredTree = tree;
+  
+  if (activeBatchFilter !== "all") {
+    filteredTree = filteredTree.filter(s => s.name_bn === activeBatchFilter);
+  }
+
+  if (searchTerm !== "") {
+    filteredTree = filteredTree.map(batch => {
+      const subjects = batch.chapters.map(sub => {
+        const sMatch = sub.name_bn.toLowerCase().includes(searchTerm);
+        const topics = sub.topics.filter(t => t.name_bn.toLowerCase().includes(searchTerm) || sMatch);
+        if (topics.length > 0 || sMatch) return { ...sub, topics };
+        return null;
+      }).filter(Boolean);
+      
+      if (subjects.length > 0) return { ...batch, chapters: subjects };
+      return null;
+    }).filter(Boolean);
+  }
+
+  if (filteredTree.length === 0) {
+    treeEl.innerHTML = `<div class="glass-card" style="text-align:center; padding:40px 20px; color:var(--text-muted); font-weight:800;">কোনো ডেটা পাওয়া যায়নি।</div>`;
+    return;
+  }
+
+  treeEl.innerHTML = filteredTree.map(batch => `
+    <div class="glass-card">
+      <div class="batch-title">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          ${batch.name_bn} ${batch.isActive === false ? `<span class="inactive-badge">বন্ধ</span>` : ""}
+        </div>
+        <div class="actions">
+          <button class="icon-btn toggle-batch" data-id="${batch.id}" style="${batch.isActive === false ? 'color:#ef4444; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05);' : ''}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${batch.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
+          <button class="icon-btn delete delete-batch" data-id="${batch.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        </div>
+      </div>
+
+      ${batch.chapters.length === 0 ? `<div style="font-size:0.85rem; color:var(--text-muted); font-weight:700; margin-bottom:12px;">কোনো বিষয় নেই।</div>` : ""}
+
+      ${batch.chapters.map(subject => {
+        const isOpen = openSubjects.has(subject.id) || searchTerm !== "";
+        return `
+        <div class="subject-box">
+          <div class="subject-head" data-id="${subject.id}">
+            <div>
+              <div class="subject-name">${subject.name_bn} ${subject.isActive === false ? `<span class="inactive-badge">বন্ধ</span>` : ""}</div>
+              <div class="subject-meta">${subject.topics.length} টি টপিক</div>
+            </div>
+            <div class="actions" onclick="event.stopPropagation()">
+              <button class="icon-btn edit-subject" data-id="${subject.id}" title="সম্পাদনা"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="icon-btn toggle-subject" data-id="${subject.id}" style="${subject.isActive === false ? 'color:#ef4444; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05);' : ''}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${subject.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
+              <button class="icon-btn delete delete-subject" data-id="${subject.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              <div class="icon-btn" style="background:transparent; border-color:transparent; pointer-events:none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(${isOpen ? '180deg' : '0deg'}); transition: transform 0.3s;"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="topic-list ${isOpen ? "open" : ""}">
+            ${subject.topics.map(topic => {
+              const parts = topic.name_bn.split(" - ");
+              const mainTopic = parts[0];
+              const subTopic = parts.length > 1 ? `<span class="sub-badge">${parts.slice(1).join(" - ")}</span>` : "";
+              
+              return `
+              <div class="topic-item">
+                <div class="topic-name">${mainTopic} ${subTopic} ${topic.isActive === false ? `<span class="inactive-badge">বন্ধ</span>` : ""}</div>
+                <div class="actions">
+                  <button class="icon-btn edit-topic" data-id="${topic.id}" style="width:30px;height:30px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  <button class="icon-btn toggle-topic" data-id="${topic.id}" style="width:30px;height:30px; ${topic.isActive === false ? 'color:#ef4444; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05);' : ''}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${topic.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
+                  <button class="icon-btn delete delete-topic" data-id="${topic.id}" style="width:30px;height:30px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                </div>
+              </div>
+            `;
+            }).join("")}
+          </div>
+        </div>
+        `;
+      }).join("")}
+    </div>
+  `).join("");
+
+  attachEvents();
+}
+
+function attachEvents() {
+  document.querySelectorAll(".subject-head").forEach(head => {
+    head.addEventListener("click", () => {
+      const id = head.dataset.id;
+      if (openSubjects.has(id)) openSubjects.delete(id);
+      else openSubjects.add(id);
+      renderTree();
+    });
+  });
+
+  document.querySelectorAll(".delete-batch").forEach(btn => btn.addEventListener("click", async () => {
+    if(confirm("সতর্কতা: এই ব্যাচটি মুছলে এর ভেতরের সব বিষয় ও টপিক মুছে যাবে! নিশ্চিত?")) {
+      try { await deleteDoc(doc(db, "subjects", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) { showToast(friendlyError(err), "error"); }
+    }
+  }));
+  document.querySelectorAll(".toggle-batch").forEach(btn => btn.addEventListener("click", async () => {
+    const batch = findBatch(btn.dataset.id);
+    if(confirm(`এই ব্যাচটি ${batch.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+      try { await setSubjectActive(btn.dataset.id, batch.isActive === false ? true : false); showToast("আপডেট হয়েছে", "success"); loadTree(); } catch (err) { showToast(friendlyError(err), "error"); }
+    }
+  }));
+
+  document.querySelectorAll(".edit-subject").forEach(btn => btn.addEventListener("click", async () => {
+    const subject = findSubject(btn.dataset.id);
+    const name = prompt("বিষয়ের নতুন নাম:", subject.name_bn);
+    if (name && name.trim()) {
+      try { await updateChapter(subject.id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+  document.querySelectorAll(".toggle-subject").forEach(btn => btn.addEventListener("click", async () => {
+    const subject = findSubject(btn.dataset.id);
+    if(confirm(`এই বিষয়টি ${subject.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+      try { await setChapterActive(subject.id, subject.isActive === false ? true : false); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+  document.querySelectorAll(".delete-subject").forEach(btn => btn.addEventListener("click", async () => {
+    if(confirm("সতর্কতা: এই বিষয়টি মুছলে এর ভেতরের সব টপিক মুছে যাবে! নিশ্চিত?")) {
+      try { await deleteDoc(doc(db, "chapters", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+
+  document.querySelectorAll(".edit-topic").forEach(btn => btn.addEventListener("click", async () => {
+    const topic = findTopic(btn.dataset.id);
+    const name = prompt("টপিকের নতুন নাম (টপিক - সাবটপিক ফরম্যাটে দিতে পারেন):", topic.name_bn);
+    if (name && name.trim()) {
+      try { await updateTopic(topic.id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+  document.querySelectorAll(".toggle-topic").forEach(btn => btn.addEventListener("click", async () => {
+    const topic = findTopic(btn.dataset.id);
+    if(confirm(`এই টপিকটি ${topic.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+      try { await setTopicActive(topic.id, topic.isActive === false ? true : false); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+  document.querySelectorAll(".delete-topic").forEach(btn => btn.addEventListener("click", async () => {
+    if(confirm("টপিকটি মুছে ফেলতে চান?")) {
+      try { await deleteDoc(doc(db, "topics", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+}
+
+function findBatch(id) { return tree.find(b => b.id === id); }
+function findSubject(id) { for (const b of tree) { const s = b.chapters.find(s => s.id === id); if (s) return s; } }
+function findTopic(id) { for (const b of tree) for (const s of b.chapters) { const t = s.topics.find(t => t.id === id); if (t) return t; } }
+
+async function handleCreateWizard() {
+  const batchSelect = document.getElementById("wzBatch").value;
+  const customBatch = document.getElementById("wzCustomBatch").value.trim();
+  const subjectName = document.getElementById("wzSubject").value.trim();
+  const btn = document.getElementById("saveWizardBtn");
+  
+  const batchName = batchSelect === "Other" ? customBatch : batchSelect;
+
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="width:18px;height:18px;border-width:2px;border-color:#fff;border-top-color:transparent;"></span> তৈরি হচ্ছে...`;
+
+  try {
+    let batch = tree.find(b => b.name_bn === batchName);
+    let batchId = batch ? batch.id : null;
+    if (!batchId) {
+      const newBatch = await addSubject({ name_bn: batchName, name_en: batchName, order: tree.length });
+      batchId = newBatch.id || newBatch; 
+    }
+
+    const newSubject = await addChapter({ subjectId: batchId, name_bn: subjectName, name_en: subjectName });
+    const subjectId = newSubject.id || newSubject;
+
+    const rows = document.querySelectorAll(".topic-row");
+    let hasTopics = false;
+
+    for (const row of rows) {
+      const tVal = row.querySelector(".t-val").value.trim();
+      const stVal = row.querySelector(".st-val").value.trim();
+      if (tVal) {
+        hasTopics = true;
+        const finalName = stVal ? `${tVal} - ${stVal}` : tVal;
+        await addTopic({ chapterId: subjectId, subjectId: batchId, name_bn: finalName, name_en: finalName });
+      }
+    }
+    
+    if (!hasTopics) {
+      await addTopic({ chapterId: subjectId, subjectId: batchId, name_bn: subjectName, name_en: subjectName });
+    }
+
+    document.getElementById("wizardModal").style.display = "none";
+    showToast("সফলভাবে তৈরি হয়েছে!", "success");
+    
+    activeBatchFilter = batchName; 
+    document.getElementById("searchInput").value = ""; 
+    searchTerm = "";
+    
+    openSubjects.add(subjectId);
+    loadTree();
+  } catch (err) {
+    showToast(friendlyError(err), "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "তৈরি করুন";
+  }
+}
+</script>
+</body>
+</html>
