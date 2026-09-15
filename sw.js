@@ -1,4 +1,4 @@
-const CACHE_NAME = "subhajitphysics-shell-v1";
+const CACHE_NAME = "subhajitphysics-shell-v2";
 const SHELL_ASSET_PATHS = ["/css/style.css", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
