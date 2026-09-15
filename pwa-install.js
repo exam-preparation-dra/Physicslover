@@ -55,7 +55,7 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
 
   btn.addEventListener("click", async () => {
     if (!deferredPrompt) {
-       alert("আপনার ব্রাউজারে সরাসরি ইনস্টল সাপোর্ট নেই। দয়া করে ব্রাউজারের মেনু (⋮) থেকে 'Add to Home Screen' বা 'Install App' এ ক্লিক করুন।");
+       alert("দয়া করে আপনার ব্রাউজারের মেনু (⋮) থেকে 'Add to Home Screen' বা 'Install App' এ ক্লিক করে ইনস্টল করুন।");
        return;
     }
     deferredPrompt.prompt();
@@ -63,20 +63,28 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
     if (choiceResult.outcome === "accepted") { deferredPrompt = null; }
   });
 
+  // এই ইভেন্টটি তখনই কল হবে যখন ফোন অ্যাপটি ইনস্টল করা শেষ করবে
   window.addEventListener("appinstalled", () => {
      overlay.innerHTML = `
-       <div style="background:rgba(255,255,255,0.03); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:40px 24px; text-align:center; max-width:400px; width:100%;">
-         <h2 style="color:#10b981; font-size:1.8rem; font-weight:900;">ইনস্টল সফল হয়েছে! 🎉</h2>
-         <p style="color:#cbd5e1; margin-top:12px; font-size:1rem; line-height:1.6; font-weight:500;">এবার ব্রাউজারটি কেটে দিন এবং আপনার ফোনের হোমস্ক্রিন থেকে <strong>SubhajitPhysics</strong> অ্যাপটি ওপেন করুন।</p>
+       <div class="install-card">
+         <div class="app-icon-placeholder" style="margin: 0 auto 20px;">
+           <img src="./icon-192.png" alt="App Icon" style="width:100%; height:100%; border-radius:22px; object-fit:cover;" onerror="this.style.display='none'">
+         </div>
+         <h2 class="install-title">Physics Lover 2.0</h2>
+         <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:16px; padding:24px; margin-top:20px;">
+           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:12px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+           <p style="color:var(--text-primary); font-size:1.1rem; font-weight:900; line-height:1.5;">অ্যাপটি ফোনে ইনস্টল হয়ে গেছে!</p>
+           <p style="color:var(--text-secondary); margin-top:10px; font-size:0.95rem; font-weight:600;">দয়া করে এই ব্রাউজারটি কেটে দিন এবং আপনার ফোনের হোমস্ক্রিন থেকে অ্যাপটি খুলুন।</p>
+         </div>
        </div>
      `;
   });
   
-  // Fallback for browsers that don't fire the install prompt immediately
+  // Fallback
   setTimeout(() => {
     if(btn.disabled) {
        btn.disabled = false;
        btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> অ্যাপটি ইনস্টল করুন`;
     }
   }, 2500);
-}
+       }
