@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>প্রোফাইল — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 600px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Premium Glass Cards ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02);
+  }
+
+  /* ===== Identity Section ===== */
+  .profile-header { text-align: center; padding: 24px 16px; position: relative; overflow: hidden; }
+  .profile-header::before { content: ''; position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 200px; height: 100px; background: var(--color-accent); filter: blur(60px); opacity: 0.15; z-index: -1; border-radius: 50%; }
+  
+  /* Image Protection Layer */
+  .img-container { position: relative; width: 110px; height: 110px; margin: 0 auto 16px; }
+  .img-container img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid rgba(128,128,128,0.2); pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .img-shield { position: absolute; inset: 0; z-index: 10; border-radius: 50%; } 
+  .fallback-avatar { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent), #3b82f6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 900; }
+
+  .st-name { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); margin-bottom: 4px; }
+  .st-meta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  .batch-badge { background: rgba(var(--color-accent-rgb), 0.1); color: var(--color-accent); padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; border: 1px solid rgba(var(--color-accent-rgb), 0.2); }
+
+  /* ===== Tab Navigation ===== */
+  .tab-nav { display: flex; gap: 8px; background: rgba(128,128,128,0.05); padding: 6px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(128,128,128,0.1); }
+  .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-secondary); font-size: 0.85rem; font-weight: 800; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .tab-btn.active { background: var(--surface); color: var(--color-accent); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--surface-border); }
+  .tab-content { display: none; animation: fadeIn 0.3s ease; }
+  .tab-content.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== Stats Grid ===== */
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-box { background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.08); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat-val { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-num); }
+  .stat-lbl { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-top: 4px; }
+
+  /* ===== Advanced Badges ===== */
+  .scroll-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+  .scroll-row::-webkit-scrollbar { display: none; }
+  .badge-card { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.08); border-radius: 16px; padding: 16px; text-align: center; min-width: 110px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .badge-icon-wrap { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .badge-title { font-size: 0.8rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; }
+  .badge-count { font-size: 0.75rem; font-weight: 900; background: var(--surface); border: 1px solid var(--surface-border); padding: 4px 10px; border-radius: 8px; display: inline-block; font-family: var(--font-num); }
+
+  /* ===== Search & Filter ===== */
+  .batch-filters { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none; margin-bottom: 12px; }
+  .batch-filters::-webkit-scrollbar { display: none; }
+  .chip { padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.15); color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: 0.2s; }
+  .chip.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .search-box { display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.03); border: 1px solid var(--surface-border); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; }
+  .search-box input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+
+  /* ===== Network Rows ===== */
+  .dir-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(128,128,128,0.02); border: 1px solid var(--surface-border); border-radius: 14px; margin-bottom: 10px; }
+  .dir-name { font-weight: 800; font-size: 0.9rem; color: var(--text-primary); }
+  .dir-batch { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; background: rgba(128,128,128,0.08); padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+
+  /* Buttons */
+  .btn-primary { background: var(--color-accent); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; width: 100%; }
+  .btn-secondary { background: rgba(128,128,128,0.08); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); padding: 8px 14px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+  .btn-sm { padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; }
+  .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; border: 1px solid transparent; }
+  .badge-friend { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
+  .badge-pending { background: rgba(128,128,128,0.1); color: var(--text-muted); border-color: rgba(128,128,128,0.2); }
+
+  /* ===== Advanced Badge Collection ===== */
+  #badgeCollectionAdvanced{margin:0 0 18px}
+  .badge-collection-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px;border:1px solid rgba(128,128,128,.14);border-radius:20px;background:linear-gradient(145deg,rgba(128,128,128,.07),rgba(128,128,128,.02));}
+  .badge-kicker{margin:0 0 4px;font-size:.58rem;letter-spacing:.13em;font-weight:950;color:var(--color-accent)}
+  .badge-collection-head h3{margin:0;font-size:1.05rem;font-weight:950;color:var(--text-primary)}
+  .badge-collection-head p:last-child{margin:4px 0 0;font-size:.68rem;color:var(--text-muted);font-weight:700}
+  .badge-share-btn{border:1px solid rgba(var(--color-accent-rgb),.25);background:rgba(var(--color-accent-rgb),.08);color:var(--color-accent);padding:9px 11px;border-radius:11px;font:inherit;font-size:.62rem;font-weight:900;white-space:nowrap}
+  .badge-progress{height:7px;border-radius:99px;background:rgba(128,128,128,.13);overflow:hidden;margin:9px 2px 12px}
+  .badge-progress i{display:block;height:100%;border-radius:99px;background:var(--color-accent);transition:width .5s ease}
+  .badge-filter-scroll{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:1px 0 7px}
+  .badge-filter-scroll::-webkit-scrollbar{display:none}
+  .badge-chip{border:1px solid var(--surface-border);background:var(--surface);color:var(--text-muted);padding:7px 11px;border-radius:99px;font:inherit;font-size:.62rem;font-weight:800;white-space:nowrap}
+  .badge-chip.active{background:var(--color-accent);border-color:var(--color-accent);color:#fff}
+  .badge-search{margin:4px 0 13px}
+  .badge-search input{width:100%;box-sizing:border-box;border:1px solid var(--surface-border);background:var(--surface);color:var(--text-primary);outline:none;border-radius:12px;padding:10px 12px;font:inherit;font-size:.72rem;font-weight:650}
+  .badge-section-title{margin:14px 2px 9px;font-size:.72rem;font-weight:950;color:var(--text-primary)}
+  .badge-mini-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .badge-mini-row::-webkit-scrollbar{display:none}
+  .badge-mini-card{min-width:150px;display:flex;align-items:center;gap:9px;padding:10px;border:1px solid var(--surface-border);border-radius:14px;background:var(--surface);color:var(--text-primary);text-align:left}
+  .badge-mini-card b{display:block;font-size:.65rem;line-height:1.25}
+  .badge-mini-card small{display:block;margin-top:3px;font-size:.55rem;color:var(--text-muted);font-weight:700}
+  .badge-art{width:40px;height:40px;min-width:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.15);color:#fff;background:linear-gradient(145deg,#64748b,#1e293b);box-shadow:0 5px 15px rgba(0,0,0,.12)}
+  .badge-art svg{width:22px;height:22px}
+  .badge-art.common{background:linear-gradient(145deg,#64748b,#334155)}
+  .badge-art.uncommon{background:linear-gradient(145deg,#0891b2,#164e63)}
+  .badge-art.rare{background:linear-gradient(145deg,#4f46e5,#312e81)}
+  .badge-art.epic{background:linear-gradient(145deg,#9333ea,#581c87)}
+  .badge-art.legendary{background:linear-gradient(145deg,#d97706,#78350f)}
+  .badge-art.secret{background:linear-gradient(145deg,#0f172a,#020617)}
+  .badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .badge-card-new{border:1px solid var(--surface-border);background:var(--surface);border-radius:15px;padding:11px 7px;color:var(--text-primary);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+  .badge-card-new.locked{opacity:.53;filter:saturate(.45)}
+  .badge-card-new b{font-size:.62rem;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .badge-card-new small{font-size:.52rem;color:var(--text-muted);font-weight:700}
+  .badge-empty{padding:18px;text-align:center;color:var(--text-muted);font-size:.68rem;font-weight:700}
+  .badge-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px}
+  .badge-modal{position:relative;width:min(360px,100%);background:var(--surface);border:1px solid var(--surface-border);border-radius:24px;padding:28px 20px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.3)}
+  .badge-modal-close{position:absolute;right:11px;top:9px;width:30px;height:30px;border:0;background:transparent;color:var(--text-muted);font-size:22px}
+  .badge-modal-art{width:88px;height:88px;margin:2px auto 12px;border-radius:25px;display:flex;align-items:center;justify-content:center;color:#fff}
+  .badge-modal-art svg{width:44px;height:44px}
+  .badge-modal-rarity{text-transform:uppercase;letter-spacing:.12em;font-size:.56rem;color:var(--color-accent);font-weight:950;margin:0}
+  .badge-modal h3{margin:7px 0;font-size:1.2rem;font-weight:950}
+  .badge-modal p:not(.badge-modal-rarity){font-size:.72rem;line-height:1.55;color:var(--text-muted);font-weight:650}
+  .earned-text{color:#16a34a}
+  @media(max-width:420px){.badge-grid{grid-template-columns:repeat(3,1fr)}.badge-collection-head{padding:15px}.badge-share-btn{padding:8px 9px;font-size:.57rem}}
+
+
+  .badge-unified-panel{margin-bottom:18px}
+  .badge-collection-head{position:relative;overflow:hidden}
+  .badge-collection-head:after{content:"";position:absolute;width:130px;height:130px;right:-55px;top:-70px;border-radius:50%;background:var(--color-accent);opacity:.08;filter:blur(10px)}
+  .badge-art{position:relative;overflow:hidden;flex-shrink:0}
+  .badge-art-ring{position:absolute;inset:4px;border:1px solid rgba(255,255,255,.25);border-radius:10px;pointer-events:none}
+  .badge-art:after{content:"";position:absolute;width:28px;height:28px;left:-35px;top:-35px;background:rgba(255,255,255,.24);transform:rotate(35deg);transition:.55s}
+  .badge-card-new:hover .badge-art:after,.badge-mini-card:hover .badge-art:after{left:100%;top:100%}
+  .badge-art.large{width:92px;height:92px;margin:3px auto 12px;border-radius:26px}
+  .badge-art.large .badge-art-ring{border-radius:20px}
+  .badge-art.large svg{width:46px;height:46px}
+  .badge-art.is-locked{background:linear-gradient(145deg,#475569,#0f172a)!important}
+  .badge-card-new{position:relative;padding:12px 8px 11px;min-height:164px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}
+  .badge-card-new:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.08)}
+  .badge-card-new.earned{border-color:rgba(var(--color-accent-rgb),.22);box-shadow:0 6px 20px rgba(var(--color-accent-rgb),.06)}
+  .badge-card-new.locked{opacity:.72}
+  .badge-how{display:block;font-size:.53rem;line-height:1.35;color:var(--text-muted);font-weight:650;min-height:34px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .badge-card-progress{width:82%;height:4px;border-radius:99px;background:rgba(128,128,128,.13);overflow:hidden;margin-top:1px}.badge-card-progress i{display:block;height:100%;background:var(--color-accent);border-radius:99px}
+  .badge-how-big{font-size:.58rem;font-weight:950;letter-spacing:.08em;color:var(--color-accent);text-transform:uppercase;margin-top:6px}
+  .badge-modal-desc{margin:7px 0 12px!important}
+  .badge-modal-track{height:7px;background:rgba(128,128,128,.14);border-radius:99px;overflow:hidden;margin:10px 0 5px}.badge-modal-track i{display:block;height:100%;background:var(--color-accent);border-radius:99px}
+  .badge-modal-progress{font-size:.68rem;font-weight:850;color:var(--text-muted);margin-bottom:12px}
+  @keyframes badgeUnlockPop{0%{opacity:0;transform:scale(.55) rotate(-8deg)}55%{opacity:1;transform:scale(1.08) rotate(2deg)}75%{transform:scale(.96) rotate(-1deg)}100%{transform:scale(1) rotate(0)}}
+  @keyframes badgeUnlockGlow{0%,100%{box-shadow:0 0 0 rgba(var(--color-accent-rgb),0)}50%{box-shadow:0 0 42px rgba(var(--color-accent-rgb),.42)}}
+  .badge-unlock-overlay{animation:fadeIn .18s ease}.badge-unlock-card{animation:badgeUnlockPop .65s cubic-bezier(.2,.8,.2,1),badgeUnlockGlow 1.6s ease-in-out .25s 2}
+  @media(max-width:420px){.badge-grid{grid-template-columns:repeat(2,1fr)}.badge-card-new{min-height:175px}.badge-how{-webkit-line-clamp:3;min-height:48px}}
+</style>
+
+<style id="premium-badges-css">
+.advanced-badges{margin-top:18px;padding:18px;overflow:hidden}
+.badge-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.badge-kicker{font-size:.68rem;letter-spacing:.16em;font-weight:900;opacity:.55}.badge-head h2{margin:3px 0;font-size:1.3rem}.badge-head p{margin:0;color:var(--text-muted);font-size:.78rem}.badge-total{font-weight:900;font-size:1.5rem}.badge-total span{font-size:.75rem;opacity:.5}.badge-progress{height:5px;border-radius:9px;background:rgba(148,163,184,.18);margin:13px 0 15px;overflow:hidden}.badge-progress i,.mini-progress i,.detail-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7c3aed,#06b6d4);transition:width .8s ease}
+.badge-filter{display:flex;gap:7px;margin-bottom:14px}.badge-filter button{border:1px solid var(--border-color);background:transparent;border-radius:999px;padding:7px 12px;font-size:.72rem;font-weight:800;color:var(--text-primary)}.badge-filter button.active{background:var(--text-primary);color:var(--bg-primary)}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:11px}.badge-item{border:1px solid var(--border-color);background:rgba(255,255,255,.025);border-radius:18px;padding:13px 10px;text-align:left;color:var(--text-primary);cursor:pointer;transition:.25s;position:relative;overflow:hidden}.badge-item:hover{transform:translateY(-3px);border-color:rgba(124,58,237,.45)}.badge-item strong{display:block;font-size:.78rem;margin-top:9px}.badge-item>span{display:block;font-size:.64rem;opacity:.55;margin-top:3px}.badge-item>small{display:block;font-size:.62rem;line-height:1.35;margin-top:7px;color:var(--text-muted)}.badge-item>em{font-size:.62rem;font-style:normal;display:block;margin-top:4px;opacity:.7}.badge-item.locked{opacity:.72}.mini-progress{height:4px;background:rgba(148,163,184,.16);border-radius:8px;margin-top:8px;overflow:hidden}
+.premium-badge{width:66px;height:66px;position:relative;display:grid;place-items:center;margin:auto}.badge-core{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;color:var(--badge-accent);background:linear-gradient(145deg,var(--badge-soft),rgba(255,255,255,.04));border:1px solid color-mix(in srgb,var(--badge-accent) 45%,transparent);box-shadow:0 8px 22px color-mix(in srgb,var(--badge-accent) 20%,transparent),inset 0 0 18px rgba(255,255,255,.08);position:relative;z-index:2}.badge-core svg{width:25px;height:25px}.badge-orbit{position:absolute;inset:4px;border:1px dashed color-mix(in srgb,var(--badge-accent) 45%,transparent);border-radius:50%;animation:badgeSpin 10s linear infinite}.badge-rarity{position:absolute;right:-4px;bottom:-1px;background:var(--badge-accent);color:#fff;border-radius:999px;padding:2px 5px;font-size:.43rem;font-weight:900;z-index:3}.is-locked .badge-core{filter:grayscale(.8);opacity:.55}.is-locked .badge-orbit{animation:none;opacity:.35}
+.almost-box{border:1px solid rgba(124,58,237,.2);background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(6,182,212,.04));border-radius:16px;padding:10px;margin-bottom:14px}.almost-box>b{font-size:.7rem}.almost-item{width:100%;display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--text-primary);text-align:left;padding:7px 0;cursor:pointer}.almost-item .premium-badge{width:52px;height:52px;flex:none}.almost-item .badge-core{width:38px;height:38px}.almost-item strong,.almost-item small,.almost-item em{display:block}.almost-item strong{font-size:.73rem}.almost-item small{font-size:.61rem;opacity:.6}.almost-item em{font-size:.61rem;color:#8b5cf6;font-style:normal;margin-top:2px}
+.badge-modal{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(12px);display:grid;place-items:center;z-index:9999;padding:20px;animation:modalIn .2s ease}.badge-modal-card{width:min(360px,100%);background:var(--bg-primary);border:1px solid var(--border-color);border-radius:26px;padding:26px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.4)}.badge-modal-card .premium-badge{width:110px;height:110px}.badge-modal-card .badge-core{width:78px;height:78px;border-radius:22px}.badge-modal-card .badge-core svg{width:38px;height:38px}.badge-modal-card h3{margin:12px 0 7px;font-size:1.15rem}.badge-modal-rarity{font-size:.62rem;font-weight:900;opacity:.6}.how-to{text-align:left;line-height:1.55;font-size:.8rem;background:rgba(148,163,184,.08);border-radius:14px;padding:12px}.detail-progress{height:6px;background:rgba(148,163,184,.16);border-radius:8px;overflow:hidden}.badge-close{margin-top:12px;border:0;border-radius:12px;padding:9px 18px;font-weight:800;cursor:pointer}
+.badge-item.earned .badge-core{animation:earnedPulse 3s ease-in-out infinite}.badge-item.earned{animation:unlockFloat 4s ease-in-out infinite}
+@keyframes badgeSpin{to{transform:rotate(360deg)}}@keyframes earnedPulse{50%{box-shadow:0 8px 28px color-mix(in srgb,var(--badge-accent) 35%,transparent),inset 0 0 22px rgba(255,255,255,.12)}}@keyframes unlockFloat{50%{transform:translateY(-2px)}}@keyframes modalIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@media(max-width:600px){.badge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.badge-item{border-radius:15px;padding:11px 8px}.premium-badge{width:58px;height:58px}.badge-core{width:43px;height:43px}.badge-core svg{width:22px;height:22px}.badge-head h2{font-size:1.08rem}}
+</style>
+
+
+<style id="badge-polish-fix">
+.advanced-badges{
+  margin:0;
+  padding:18px;
+  overflow:hidden;
+  background:linear-gradient(145deg,#fffdf8 0%,#fbf7ed 52%,#fffaf1 100%);
+  border:1px solid rgba(178,145,78,.16);
+  box-shadow:0 12px 38px rgba(139,112,55,.08);
+  color:#3c3428;
+}
+.badge-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.badge-head h2{margin:3px 0;font-size:1.24rem;letter-spacing:-.02em;color:#30291f}
+.badge-head p{margin:0;color:#8c806e;font-size:.72rem;font-weight:750}
+.badge-total{font-size:1.45rem;font-weight:950;color:#bd8a2f;white-space:nowrap}
+.badge-total span{font-size:.72rem;color:#a99a83;font-weight:800}
+.badge-kicker{font-size:.58rem;letter-spacing:.17em;font-weight:950;color:#c0933e;opacity:.9}
+.badge-progress{height:6px;border-radius:99px;background:#eee6d7;margin:12px 1px 14px;overflow:hidden}
+.badge-progress i,.mini-progress i,.detail-progress i{
+  display:block;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#d6a13b,#c78d35,#b67a2e);
+  transition:width .7s cubic-bezier(.2,.8,.2,1)
+}
+.almost-box{
+  border:1px solid rgba(196,150,68,.18);
+  background:linear-gradient(135deg,#fffaf0,#f8f3ff);
+  border-radius:17px;padding:11px 12px;margin-bottom:14px;
+}
+.almost-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.almost-title span{font-size:.72rem;font-weight:950;color:#40372b}
+.almost-title small{font-size:.58rem;color:#b17e27;font-weight:800}
+.almost-item{
+  width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;
+  color:#40372b;text-align:left;padding:7px 0;cursor:pointer
+}
+.almost-item + .almost-item{border-top:1px solid rgba(155,130,84,.10)}
+.almost-item .premium-badge{width:50px;height:50px;flex:none}
+.almost-item .badge-core{width:38px;height:38px;border-radius:13px}
+.almost-item strong,.almost-item small,.almost-item em{display:block}
+.almost-item strong{font-size:.7rem;font-weight:900;color:#3d3428}
+.almost-item small{font-size:.59rem;line-height:1.35;color:#938673;margin-top:2px}
+.almost-item em{font-size:.6rem;color:#8c62c5;font-style:normal;font-weight:850;margin-top:2px}
+.badge-filter{display:flex;gap:7px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none}
+.badge-filter::-webkit-scrollbar{display:none}
+.badge-filter button{
+  border:1px solid rgba(154,127,79,.18);background:#fffaf1;
+  color:#8a7b66;border-radius:999px;padding:7px 11px;
+  font:inherit;font-size:.62rem;font-weight:850;white-space:nowrap;cursor:pointer
+}
+.badge-filter button.active{
+  background:linear-gradient(135deg,#d4a348,#bd8730);
+  border-color:#c3913e;color:#fff;
+  box-shadow:0 5px 16px rgba(190,139,48,.20)
+}
+.badge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.badge-item{
+  min-width:0;min-height:174px;border:1px solid rgba(154,127,79,.14);
+  background:linear-gradient(145deg,#fffefb,#faf5eb);
+  border-radius:18px;padding:12px 8px;text-align:center;color:#3d3428;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .22s,box-shadow .22s,border-color .22s
+}
+.badge-item:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(139,112,55,.10);border-color:rgba(139,92,246,.22)}
+.badge-item strong{display:block;font-size:.68rem;line-height:1.22;margin-top:8px;font-weight:950;color:#382f24}
+.badge-item>span{display:block;font-size:.57rem;color:#9b8d79;margin-top:3px}
+.badge-item>small{display:block;font-size:.55rem;line-height:1.35;margin-top:7px;color:#938673}
+.badge-item>em{display:block;font-size:.56rem;font-style:normal;margin-top:4px;color:#9a8b77;font-weight:800}
+.badge-item.locked{opacity:.94}
+.badge-item.earned{
+  border-color:rgba(201,147,53,.22);
+  background:linear-gradient(145deg,#fffdf7,#f8f0df)
+}
+.badge-item.earned .badge-core{
+  box-shadow:0 8px 26px color-mix(in srgb,var(--badge-accent) 24%,transparent),inset 0 0 18px rgba(255,255,255,.65)
+}
+.claimed-label{color:#b17d29!important;font-weight:950!important;letter-spacing:.08em}
+.mini-progress{height:4px;background:#eee7da;border-radius:8px;margin:8px 6px 0;overflow:hidden}
+.premium-badge{width:62px;height:62px;position:relative;display:grid;place-items:center;margin:auto}
+.badge-core{
+  width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:var(--badge-accent);
+  background:linear-gradient(145deg,var(--badge-soft),#fffdf8);
+  border:1px solid color-mix(in srgb,var(--badge-accent) 30%,transparent);
+  box-shadow:0 8px 22px color-mix(in srgb,var(--badge-accent) 14%,transparent),inset 0 0 18px rgba(255,255,255,.75);
+  position:relative;z-index:2
+}
+.badge-core svg{width:24px;height:24px}
+.badge-orbit{position:absolute;inset:4px;border:1px dashed color-mix(in srgb,var(--badge-accent) 34%,transparent);border-radius:50%;animation:badgeSpin 12s linear infinite}
+.badge-rarity{position:absolute;right:-3px;bottom:-1px;background:var(--badge-accent);color:#fff;border-radius:999px;padding:2px 5px;font-size:.41rem;font-weight:950;z-index:3}
+.is-locked .badge-core{
+  filter:saturate(.65);
+  opacity:.70;
+  background:linear-gradient(145deg,#f7f3ea,#ebe4d7);
+  color:#9c9385
+}
+.badge-modal{position:fixed;inset:0;background:rgba(72,59,38,.30);backdrop-filter:blur(12px);display:grid;place-items:center;z-index:9999;padding:20px;animation:modalIn .22s ease}
+.badge-modal-card{
+  width:min(360px,100%);background:#fffdf8;border:1px solid rgba(178,145,78,.20);
+  border-radius:27px;padding:27px 22px;text-align:center;
+  box-shadow:0 28px 90px rgba(92,72,35,.22);color:#3d3428
+}
+.badge-modal-card .premium-badge{width:108px;height:108px}
+.badge-modal-card .badge-core{width:76px;height:76px;border-radius:22px}
+.badge-modal-card .badge-core svg{width:37px;height:37px}
+.badge-modal-card h3{margin:12px 0 7px;font-size:1.14rem;color:#382f24}
+.badge-modal-rarity{font-size:.58rem;font-weight:950;color:#9a8a72}
+.how-to{text-align:left;line-height:1.55;font-size:.77rem;background:#f8f3e9;border-radius:14px;padding:12px;color:#695d4d}
+.detail-progress{height:6px;background:#ece4d6;border-radius:8px;overflow:hidden}
+.badge-close{margin-top:12px;border:0;border-radius:12px;padding:9px 18px;font-weight:850;cursor:pointer;background:#c99335;color:#fff}
+.badge-item.earned{animation:earnedFloat 4.5s ease-in-out infinite}
+@keyframes badgeSpin{to{transform:rotate(360deg)}}
+@keyframes earnedFloat{50%{transform:translateY(-2px)}}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@media(max-width:600px){
+  .advanced-badges{padding:15px}
+  .badge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .badge-item{min-height:170px}
+  .premium-badge{width:58px;height:58px}
+  .badge-core{width:43px;height:43px}
+  .badge-core svg{width:22px;height:22px}
+}
+</style>
+
+
+<style id="badge-unlock-polish">
+.badge-unlock-overlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:20px;background:rgba(88,70,39,.24);backdrop-filter:blur(14px);animation:unlockFade .22s ease}
+.badge-unlock-card{position:relative;width:min(330px,100%);padding:28px 22px 22px;text-align:center;border-radius:28px;border:1px solid rgba(201,147,53,.24);background:linear-gradient(145deg,#fffef9,#f7f0e2);color:#3b3226;box-shadow:0 30px 100px rgba(95,73,35,.24);overflow:hidden;animation:unlockPop .7s cubic-bezier(.18,.9,.2,1)}
+.badge-unlock-card:before{content:"";position:absolute;inset:-45%;background:radial-gradient(circle,rgba(245,190,76,.20),rgba(139,92,246,.08),transparent 60%);animation:unlockRotate 5s linear infinite}
+.badge-unlock-card>*{position:relative}
+.badge-unlock-card .premium-badge{width:118px;height:118px;margin:0 auto 7px}.badge-unlock-card .badge-core{width:82px;height:82px;border-radius:25px}.badge-unlock-card .badge-core svg{width:40px;height:40px}
+.unlock-label{font-size:.58rem;letter-spacing:.16em;font-weight:950;color:#aa7727;margin-top:4px}
+.badge-unlock-card h3{margin:8px 0 5px;font-size:1.25rem;font-weight:950;color:#352c21}
+.badge-unlock-card p{margin:0 auto 14px;max-width:260px;font-size:.72rem;line-height:1.5;color:#796d5d}
+.badge-unlock-card button{border:0;border-radius:12px;padding:9px 20px;background:linear-gradient(135deg,#c99335,#aa7626);color:#fff;font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(170,118,38,.22)}
+.unlock-spark{position:absolute!important;width:7px;height:7px;border-radius:50%;background:#f0b53e;top:28px;left:32px;box-shadow:225px 30px 0 #9b72d6,170px 230px 0 #62bfc5,35px 200px 0 #d984a7;animation:sparkFloat 1.8s ease-in-out infinite}
+@keyframes unlockFade{from{opacity:0}to{opacity:1}}@keyframes unlockPop{0%{opacity:0;transform:scale(.55) translateY(25px) rotate(-3deg)}55%{opacity:1;transform:scale(1.06) translateY(-3px) rotate(1deg)}100%{transform:scale(1)}}@keyframes unlockRotate{to{transform:rotate(360deg)}}@keyframes sparkFloat{50%{transform:scale(1.7) rotate(12deg);opacity:.7}}
+</style>
+
+</head>
+<body oncontextmenu="return false;"> <!-- Blocks Right Click Globally -->
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<div id="shareCardArea" style="position:fixed;left:-9999px;top:0;"></div>
+
+<script type="module">
+import { initTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { getApprovedResults, getStudentRank } from "../js/utils/results-utils.js";
+import { computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } from "../js/utils/analytics-utils.js";
+import { computeGamificationData, attendanceBadgesEarned } from "../js/utils/gamification-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS } from "../js/utils/friend-utils.js";
+
+initTheme();
+
+
+/* ==========================================================
+   UNIFIED BADGE SYSTEM
+   20 achievement families. Every badge is calculated from the
+   existing approved-result/gamification/syllabus data.
+   No per-badge Firestore reads.
+   ========================================================== */
+const BADGE_CATEGORIES = ["সব","পরীক্ষা","Accuracy","সঠিক উত্তর","পয়েন্ট","উন্নতি","Consistency","Speed","Perfect Score","Leaderboard","বিষয়","অধ্যায়","টপিক","Coverage","All-Rounder","Special"];
+let badgeFilter = "সব", badgeSearch = "";
+
+function makeTierBadges(prefix, category, thresholds, nameFn, descFn, checkFn, rarityFn){
+  return thresholds.map((n,i)=>({
+    id:`${prefix}-${n}`, name:nameFn(n), category, threshold:n, metric:prefix,
+    desc:descFn(n), check:c=>checkFn(c,n),
+    rarity:rarityFn ? rarityFn(n,i,thresholds) : (i===thresholds.length-1?"Legendary":i>=thresholds.length-2?"Epic":i>=2?"Rare":"Uncommon")
+  }));
+}
+
+
+function buildBadgeCatalog(ctx) {
+  const catalog = [];
+  const add = (id, title, category, requirement, rarity, icon, check, progress) =>
+    catalog.push({id,title,category,requirement,rarity,icon,check,progress});
+
+  const exam = ctx.examCount || 0, correct = ctx.totalCorrect || 0;
+  const avgAcc = Number(ctx.avgAccuracy || 0), avgPct = Number(ctx.avgPercentage || 0);
+  const bestPct = Number(ctx.bestPercentage || 0), bestAcc = Number(ctx.bestAccuracy || 0);
+  const maxImprovement = Number(ctx.maxImprovement || 0), streak = Number(ctx.longestStreak || 0);
+  const zeroWrong = Number(ctx.zeroWrongExams || 0), perfect = Number(ctx.perfectExams || 0);
+  const fast = Number(ctx.fastAccurateExams || 0), attempted = Number(ctx.attemptRate || 0);
+  const monthlyOverall = ctx.monthlyOverall || 0, monthlyClass = ctx.monthlyClass || 0;
+  const weeklyOverall = ctx.weeklyOverall || 0, weeklyClass = ctx.weeklyClass || 0;
+
+  // 20 clean, meaningful badge families. Exam milestones stop at 30.
+  const examMilestones = [1,3,5,10,15,20,25,30];
+  examMilestones.forEach(n => add(
+    `exam-${n}`, `Exam Warrior ${n}`, "পরীক্ষা",
+    `মোট ${n}টি approved পরীক্ষা সম্পূর্ণ করো।`, n>=25?"Legendary":n>=15?"Epic":n>=10?"Rare":"Common",
+    "M8", c => c.examCount >= n, c => ({value:Math.min(c.examCount,n), max:n, text:`${Math.min(c.examCount,n)} / ${n}`})
+  ));
+
+  add("accuracy-master","Accuracy Master","Accuracy","কমপক্ষে 10টি approved পরীক্ষায় গড় accuracy 90% বা তার বেশি রাখো।","Epic","M1",
+    c=>c.highAccuracyExamCount>=10,c=>({value:Math.min(c.highAccuracyExamCount,10),max:10,text:`${Math.min(c.highAccuracyExamCount,10)} / 10`}));
+  add("correct-master","Correct Answer Master","সঠিক উত্তর","মোট 500টি সঠিক উত্তর দাও।","Epic","M2",
+    c=>c.totalCorrect>=500,c=>({value:Math.min(c.totalCorrect,500),max:500,text:`${Math.min(c.totalCorrect,500)} / 500`}));
+  add("point-master","Point Collector","পয়েন্ট","মোট 5000 points অর্জন করো।","Rare","M3",
+    c=>c.totalPoints>=5000,c=>({value:Math.min(c.totalPoints,5000),max:5000,text:`${Math.min(c.totalPoints,5000)} / 5000`}));
+  add("comeback","Comeback Champion","উন্নতি","আগের performance-এর তুলনায় অন্তত 20 percentage-point improvement অর্জন করো।","Legendary","M4",
+    c=>c.maxImprovement>=20,c=>({value:Math.min(Math.max(c.maxImprovement,0),20),max:20,text:`${Math.round(Math.max(c.maxImprovement,0))} / 20%`}));
+  add("consistency","Consistency Champion","Consistency","কমপক্ষে 8টি পরীক্ষায় ধারাবাহিকভাবে 80%+ score রাখো।","Epic","M5",
+    c=>c.highScoreExamCount>=8,c=>({value:Math.min(c.highScoreExamCount,8),max:8,text:`${Math.min(c.highScoreExamCount,8)} / 8`}));
+  add("speed","Speed Solver","Speed","Accuracy অন্তত 80% রেখে 5টি পরীক্ষায় নির্ধারিত সময়ের মধ্যে দ্রুত solve করো।","Rare","M6",
+    c=>c.fastAccurateExams>=5,c=>({value:Math.min(c.fastAccurateExams,5),max:5,text:`${Math.min(c.fastAccurateExams,5)} / 5`}));
+  add("perfect","Perfect Score","Perfect Score","কমপক্ষে 3টি পরীক্ষায় 100% score অর্জন করো।","Legendary","M7",
+    c=>c.perfectExams>=3,c=>({value:Math.min(c.perfectExams,3),max:3,text:`${Math.min(c.perfectExams,3)} / 3`}));
+  add("zero-wrong","Zero Wrong","Accuracy","কমপক্ষে 5টি পরীক্ষায় একটিও ভুল উত্তর দিও না।","Epic","M9",
+    c=>c.zeroWrongExams>=5,c=>({value:Math.min(c.zeroWrongExams,5),max:5,text:`${Math.min(c.zeroWrongExams,5)} / 5`}));
+  add("attempt-discipline","Attempt Master","Consistency","কমপক্ষে 10টি পরীক্ষায় 90%+ প্রশ্ন attempt করো।","Rare","M10",
+    c=>c.highAttemptExams>=10,c=>({value:Math.min(c.highAttemptExams,10),max:10,text:`${Math.min(c.highAttemptExams,10)} / 10`}));
+  add("clean-run","Clean Run","Special","টানা 5টি approved পরীক্ষায় 80%+ score এবং 80%+ accuracy রাখো।","Epic","M11",
+    c=>c.cleanRun>=5,c=>({value:Math.min(c.cleanRun,5),max:5,text:`${Math.min(c.cleanRun,5)} / 5`}));
+  add("weekly-topper","Weekly Topper","Leaderboard","একটি সপ্তাহে overall leaderboard-এ 1st হও।","Legendary","M12",
+    c=>c.weeklyOverall>0,c=>({value:c.weeklyOverall?1:0,max:1,text:c.weeklyOverall?"Unlocked":"1 বার দরকার"}));
+  add("class-weekly-topper","Class Weekly Topper","Leaderboard","নিজের class-এর weekly leaderboard-এ 1st হও।","Epic","M13",
+    c=>c.weeklyClass>0,c=>({value:c.weeklyClass?1:0,max:1,text:c.weeklyClass?"Unlocked":"1 বার দরকার"}));
+  add("monthly-topper","Monthly Topper","Leaderboard","একটি মাসে overall leaderboard-এ 1st হও।","Legendary","M14",
+    c=>c.monthlyOverall>0,c=>({value:c.monthlyOverall?1:0,max:1,text:c.monthlyOverall?"Unlocked":"1 বার দরকার"}));
+  add("class-monthly-topper","Class Monthly Topper","Leaderboard","নিজের class-এর monthly leaderboard-এ 1st হও।","Legendary","M15",
+    c=>c.monthlyClass>0,c=>({value:c.monthlyClass?1:0,max:1,text:c.monthlyClass?"Unlocked":"1 বার দরকার"}));
+  add("subject-master","Subject Master","বিষয়","যেকোনো একটি subject-এ অন্তত 5টি approved attempt এবং 90%+ accuracy অর্জন করো।","Epic","M16",
+    c=>(c.subjectStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestSubjectMaster?1:0,max:1,text:c.bestSubjectMaster?"Unlocked":"5 attempts + 90%"}));
+  add("chapter-master","Chapter Master","অধ্যায়","নিজের class-এর যেকোনো chapter-এ অন্তত 5টি attempt এবং 90%+ accuracy অর্জন করো।","Rare","M17",
+    c=>(c.chapterStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestChapterMaster?1:0,max:1,text:c.bestChapterMaster?"Unlocked":"5 attempts + 90%"}));
+  add("topic-master","Topic Master","টপিক","নিজের class-এর যেকোনো topic-এ অন্তত 5টি attempt এবং 90%+ accuracy অর্জন করো।","Rare","M18",
+    c=>(c.topicStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestTopicMaster?1:0,max:1,text:c.bestTopicMaster?"Unlocked":"5 attempts + 90%"}));
+  add("syllabus-master","Syllabus Master","Special","নিজের applicable syllabus-এর অন্তত 80% topic-এ performance record তৈরি করো।","Legendary","M19",
+    c=>c.topicCoverage>=80,c=>({value:Math.min(c.topicCoverage,80),max:80,text:`${Math.round(c.topicCoverage)}% / 80%`}));
+  add("all-rounder","All-Rounder","Special","কমপক্ষে 3টি subject-এ 5+ attempt এবং 80%+ accuracy অর্জন করো।","Legendary","M20",
+    c=>(c.subjectStats||[]).filter(x=>x.attempts>=5&&x.accuracy>=80).length>=3,c=>({value:Math.min(c.strongSubjects,3),max:3,text:`${Math.min(c.strongSubjects,3)} / 3`}));
+
+  return catalog;
+}
+
+function badgeIconSvg(code) {
+  const paths = {
+    M1:'<path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3z"/>',
+    M2:'<circle cx="12" cy="12" r="8"/><path d="M8.5 12l2.2 2.2 4.8-5"/>',
+    M3:'<path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v5M8 21h8"/>',
+    M4:'<path d="M5 18l4-4 3 2 7-8"/><path d="M15 8h4v4"/>',
+    M5:'<path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="8"/>',
+    M6:'<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>',
+    M7:'<path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    M8:'<path d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7l7-4z"/><path d="M9 12l2 2 4-4"/>',
+    M9:'<circle cx="12" cy="12" r="8"/><path d="M8 12h8"/>',
+    M10:'<path d="M5 5h14v14H5z"/><path d="M8 12l2 2 5-5"/>',
+    M11:'<path d="M4 12a8 8 0 0 0 16 0"/><path d="M4 12V7M20 12V7"/>',
+    M12:'<path d="M6 3h12v5c0 5-2.5 7-6 9-3.5-2-6-4-6-9V3z"/>',
+    M13:'<path d="M12 3l2 5 5 .5-3.8 3.3 1.2 5.2-4.4-2.7-4.4 2.7 1.2-5.2L5 8.5 10 8l2-5z"/>',
+    M14:'<path d="M5 20V9M5 9l7-5 7 5M8 20v-7h8v7"/>',
+    M15:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',
+    M16:'<path d="M4 19h16M6 16V8h4v8M14 16V5h4v11"/>',
+    M17:'<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    M18:'<circle cx="12" cy="12" r="8"/><path d="M9 12l2 2 4-4"/>',
+    M19:'<path d="M4 19l4-8 4 5 4-9 4 12"/>',
+    M20:'<path d="M12 3l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 3z"/>'
+  };
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[code]||paths.M20}</svg>`;
+}
+
+function badgeVisual(badge, earned) {
+  const themes = {
+    Common:["#94a3b8","#e2e8f0"], Uncommon:["#0ea5e9","#dbeafe"], Rare:["#8b5cf6","#ede9fe"],
+    Epic:["#ec4899","#fce7f3"], Legendary:["#f59e0b","#fef3c7"], Secret:["#14b8a6","#ccfbf1"]
+  };
+  const [accent,soft] = themes[badge.rarity] || themes.Rare;
+  return `<div class="premium-badge ${earned?"is-earned":"is-locked"}" style="--badge-accent:${accent};--badge-soft:${soft}">
+    <div class="badge-orbit"></div><div class="badge-core">${badgeIconSvg(badge.icon)}</div>
+    <div class="badge-rarity">${badge.rarity}</div>
+  </div>`;
+}
+
+function renderBadgeCollection(state) {
+  const host = document.getElementById("badgeCollectionAdvanced");
+  if (!host) return;
+
+  const claimed = state.filter(x => x.earned);
+  const locked = state.filter(x => !x.earned);
+  const almost = locked
+    .filter(x => x.progress && x.progress.max > 1)
+    .sort((a,b) => (b.progress.value / b.progress.max) - (a.progress.value / a.progress.max))
+    .slice(0, 3);
+
+  host.innerHTML = `<section class="glass-card advanced-badges">
+    <div class="badge-head">
+      <div>
+        <div class="badge-kicker">ACHIEVEMENTS</div>
+        <h2>My Badge Collection</h2>
+        <p>${claimed.length} / ${state.length} claimed</p>
+      </div>
+      <div class="badge-total">${claimed.length}<span>/${state.length}</span></div>
+    </div>
+
+    <div class="badge-progress">
+      <i style="width:${state.length ? (claimed.length / state.length) * 100 : 0}%"></i>
+    </div>
+
+    ${almost.length ? `<div class="almost-box">
+      <div class="almost-title"><span>Closest to unlock</span><small>আর একটু এগোলেই</small></div>
+      ${almost.map(x => `<button class="almost-item" type="button" data-badge-id="${x.id}">
+        ${badgeVisual(x,false)}
+        <span>
+          <strong>${x.title}</strong>
+          <small>${x.requirement}</small>
+          <em>${x.progress.text}</em>
+        </span>
+      </button>`).join("")}
+    </div>` : ""}
+
+    <div class="badge-filter">
+      <button type="button" class="active" data-filter="claimed">Claimed <b>${claimed.length}</b></button>
+      <button type="button" data-filter="locked">Locked <b>${locked.length}</b></button>
+      <button type="button" data-filter="all">All <b>${state.length}</b></button>
+    </div>
+
+    <div class="badge-grid">
+      ${state.map(x => `<button type="button"
+          class="badge-item ${x.earned ? "earned" : "locked"}"
+          data-badge-id="${x.id}" data-earned="${x.earned}">
+        ${badgeVisual(x,x.earned)}
+        <strong>${x.title}</strong>
+        <span>${x.category}</span>
+        ${x.earned
+          ? `<small class="claimed-label">CLAIMED</small>`
+          : `<small>${x.requirement}</small>`}
+        ${!x.earned && x.progress ? `<div class="mini-progress">
+          <i style="width:${Math.min(100,(x.progress.value / x.progress.max) * 100)}%"></i>
+        </div><em>${x.progress.text}</em>` : ""}
+      </button>`).join("")}
+    </div>
+  </section>`;
+
+  const applyFilter = f => {
+    host.querySelectorAll(".badge-item").forEach(el => {
+      const earned = el.dataset.earned === "true";
+      el.style.display = f === "all" || (f === "claimed" && earned) || (f === "locked" && !earned) ? "" : "none";
+    });
+  };
+
+  host.querySelectorAll("[data-filter]").forEach(btn => {
+    btn.onclick = () => {
+      host.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilter(btn.dataset.filter);
+    };
+  });
+
+  host.querySelectorAll("[data-badge-id]").forEach(el => {
+    el.onclick = () => showBadgeDetail(state.find(x => x.id === el.dataset.badgeId));
+  });
+
+  applyFilter("claimed");
+}
+
+function showBadgeDetail(b) {
+  if (!b) return;
+  const old=document.getElementById("badgeDetailModal"); if(old) old.remove();
+  const div=document.createElement("div"); div.id="badgeDetailModal"; div.className="badge-modal";
+  div.innerHTML=`<div class="badge-modal-card">${badgeVisual(b,b.earned)}<div class="badge-modal-rarity">${b.rarity}</div><h3>${b.title}</h3><p class="how-to"><b>কীভাবে অর্জন করবে?</b><br>${b.requirement}</p>${b.progress?`<div class="detail-progress"><i style="width:${Math.min(100,b.progress.value/b.progress.max*100)}%"></i></div><p>${b.progress.text}</p>`:""}<button class="badge-close">Close</button></div>`;
+  document.body.appendChild(div); div.onclick=e=>{if(e.target===div||e.target.classList.contains("badge-close"))div.remove()};
+}
+
+
+function showBadgeUnlocks(state) {
+  try {
+    const key = `badge-seen-${student.studentId}`;
+    const previous = JSON.parse(localStorage.getItem(key) || "[]");
+    const prevSet = new Set(previous);
+    const fresh = state.filter(b => b.earned && !prevSet.has(b.id));
+    localStorage.setItem(key, JSON.stringify(state.filter(b=>b.earned).map(b=>b.id)));
+    if (!fresh.length) return;
+
+    const b = fresh[0];
+    const overlay = document.createElement("div");
+    overlay.className = "badge-unlock-overlay";
+    overlay.innerHTML = `<div class="badge-unlock-card">
+      <div class="unlock-spark"></div>
+      ${badgeVisual(b,true)}
+      <div class="unlock-label">BADGE CLAIMED</div>
+      <h3>${b.title}</h3>
+      <p>${b.requirement}</p>
+      <button type="button">Continue</button>
+    </div>`;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    overlay.addEventListener("click", e => { if (e.target === overlay || e.target.closest("button")) close(); });
+    setTimeout(close, 6500);
+  } catch {}
+}
+
+
+function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topicStats) {
+  const arr=results||[], nums=k=>arr.reduce((s,r)=>s+Number(r[k]||0),0);
+  const percentages=arr.map(r=>Number(r.percentage||0)), accuracies=arr.map(r=>Number(r.accuracy||0));
+  const highAccuracyExamCount=arr.filter(r=>Number(r.accuracy||0)>=90).length;
+  const highScoreExamCount=arr.filter(r=>Number(r.percentage||0)>=80).length;
+  const perfectExams=arr.filter(r=>Number(r.percentage||0)>=100).length;
+  const zeroWrongExams=arr.filter(r=>Number(r.wrongCount||0)===0&&Number(r.attempted||0)>0).length;
+  const highAttemptExams=arr.filter(r=>Number(r.totalQuestions||0)>0 && Number(r.attempted||0)/Number(r.totalQuestions||1)>=.9).length;
+  const fastAccurateExams=arr.filter(r=>Number(r.accuracy||0)>=80 && Number(r.timeTakenSeconds||0)>0 && Number(r.avgTimePerQuestionSeconds||999)<=60).length;
+  let cleanRun=0,run=0; arr.slice().sort((a,b)=>new Date(a.submittedAt||0)-new Date(b.submittedAt||0)).forEach(r=>{if(Number(r.percentage||0)>=80&&Number(r.accuracy||0)>=80)run++;else run=0;cleanRun=Math.max(cleanRun,run)});
+  const topicCoverage=topicStats?.length ? topicStats.filter(x=>x.attempts>0).length/topicStats.length*100 : 0;
+  return {
+    examCount:arr.length,totalCorrect:nums("correctCount"),totalPoints:nums("obtainedMarks"),
+    avgAccuracy:accuracies.length?accuracies.reduce((a,b)=>a+b,0)/accuracies.length:0,
+    avgPercentage:percentages.length?percentages.reduce((a,b)=>a+b,0)/percentages.length:0,
+    bestPercentage:Math.max(0,...percentages),bestAccuracy:Math.max(0,...accuracies),
+    highAccuracyExamCount,highScoreExamCount,perfectExams,zeroWrongExams,highAttemptExams,fastAccurateExams,cleanRun,
+    maxImprovement:Number(gData?.maxImprovement||0),longestStreak:Number(gData?.longestStreak||0),
+    weeklyOverall:Number(gData?.badgeCounts?.weeklyOverall?.[gData?.nameOf]||0),
+    weeklyClass:Number(gData?.badgeCounts?.weeklyClass?.[gData?.nameOf]||0),
+    monthlyOverall:Number(gData?.badgeCounts?.monthlyOverall?.[gData?.nameOf]||0),
+    monthlyClass:Number(gData?.badgeCounts?.monthlyClass?.[gData?.nameOf]||0),
+    subjectStats,chapterStats,topicStats,topicCoverage,
+    strongSubjects:(subjectStats||[]).filter(x=>x.attempts>=5&&x.accuracy>=80).length,
+    bestSubjectMaster:(subjectStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),
+    bestChapterMaster:(chapterStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),
+    bestTopicMaster:(topicStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90)
+  };
+}
+async function initAdvancedBadges() {
+  try {
+    const [results, rank, gData, subjectsSnap, chaptersSnap, topicsSnap] = await Promise.all([
+      getApprovedResults(student.studentId),
+      getStudentRank(student.studentId).catch(()=>null),
+      computeGamificationData().catch(()=>({})),
+      getDocs(collection(db, "subjects")),
+      getDocs(collection(db, "chapters")),
+      getDocs(collection(db, "topics"))
+    ]);
+    const subjectMap={}, chapterMap={}, topicMap={};
+    subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id});
+    chaptersSnap.forEach(d=>{const x=d.data();chapterMap[d.id]=x.name_bn||x.name_en||d.id});
+    topicsSnap.forEach(d=>{const x=d.data();topicMap[d.id]=x.name_bn||x.name_en||d.id});
+    const subjectStats=computeSubjectStats(results,subjectMap).map(x=>({...x,id:x.subjectId}));
+    const chapterStats=computeChapterStats(results,chapterMap).map(x=>({...x,id:x.chapterId}));
+    const topicStats=computeTopicStats(results,topicMap).map(x=>({...x,id:x.topicId}));
+    const ctx=getBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);
+    const state=buildBadgeCatalog(ctx).map(b=>({...b,earned:!!b.check(ctx),progress:b.progress?b.progress(ctx):null}));
+    renderBadgeCollection(state);
+    showBadgeUnlocks(state);
+    const old=document.getElementById("badgeCollectionAdvancedOld");
+    if(old) old.remove();
+  } catch(e) { console.warn("Advanced badges unavailable",e); }
+}
+
+const shell = document.getElementById("shell");
+let student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  renderPage();
+  initAdvancedBadges();
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) {
+      student = fresh;
+      renderPage();
+      initAdvancedBadges();
+    }
+  }).catch(err => console.warn("Student refresh skipped", err));
+}
+
+window.switchTab = function(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+};
+
+let allNetStudents = [], friendIds = [], incomingReqs = [], outgoingReqs = [];
+let dirBatchFilter = "all", dirSearchTerm = "";
+
+async function renderPage() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "profile")}
+    
+    <div id="identitySection" class="glass-card profile-header mt-4"><div class="spinner" style="margin: 20px auto;"></div></div>
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('tab-overview')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        ওভারভিউ
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-stats')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
+        স্ট্যাটস
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-network')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        নেটওয়ার্ক
+      </button>
+    </div>
+
+    <div id="tab-overview" class="tab-content active">
+      <div id="topperSection"></div>
+      <div id="badgeCollectionAdvanced"></div>
+    </div>
+    <div id="tab-stats" class="tab-content">
+      <div id="statsSection"></div>
+    </div>
+    <div id="tab-network" class="tab-content">
+      <div id="reqAndFriendsSection"></div>
+      <div class="glass-card mt-4" style="padding:16px;">
+        <p style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">শিক্ষার্থী ডিরেক্টরি</p>
+        <div class="batch-filters" id="dirFilters"></div>
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="dirSearch" placeholder="নাম দিয়ে খুঁজুন...">
+        </div>
+        <div id="dirList"></div>
+      </div>
+    </div>
+  `;
+
+  await Promise.all([
+    loadIdentity(),
+    loadGamification(),
+    loadStats(),
+    loadNetworkData()
+  ]);
+
+  document.getElementById("dirSearch").addEventListener("input", (e) => {
+    dirSearchTerm = e.target.value.trim().toLowerCase();
+    renderDirectory();
+  });
+}
+
+async function loadIdentity() {
+  const el = document.getElementById("identitySection");
+  try {
+    const snap = await getDoc(doc(db, "students", student.docId));
+    const data = snap.exists() ? snap.data() : {};
+    const myBatch = data.className || student.className || "অজানা ব্যাচ";
+
+    el.innerHTML = `
+      <div class="img-container">
+        ${data.photoURL 
+          ? `<img src="${data.photoURL}" alt="Profile">` 
+          : `<div class="fallback-avatar">${student.name.charAt(0)}</div>`
+        }
+        <div class="img-shield"></div>
+      </div>
+      <div class="st-name">${student.name}</div>
+      <div class="st-meta">
+        <span class="batch-badge">${myBatch}</span>
+        <span>ID: ${student.studentId}</span>
+      </div>
+      <button class="btn-primary mt-4" id="shareProfileBtn" style="padding:12px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        রিপোর্ট কার্ড শেয়ার বা ডাউনলোড
+      </button>
+    `;
+    document.getElementById("shareProfileBtn").addEventListener("click", () => openShareChoice(data));
+  } catch (err) {
+    el.innerHTML = `<div class="text-center text-muted">প্রোফাইল লোড করা যায়নি।</div>`;
+  }
+}
+
+async function loadGamification() {
+  const topperEl = document.getElementById("topperSection");
+  try {
+    const rank = await getStudentRank(student.studentId).catch(()=>null);
+    topperEl.innerHTML = rank ? `
+      <div style="background:linear-gradient(135deg,rgba(var(--color-accent-rgb),.1),rgba(var(--color-accent-rgb),.02));border:1px solid rgba(var(--color-accent-rgb),.2);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;"><div style="width:48px;height:48px;border-radius:50%;background:var(--color-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;">#${rank.rank}</div><div><p style="font-weight:900;font-size:1rem;color:var(--text-primary);">ওভারঅল র‍্যাঙ্ক</p><p style="font-size:.75rem;color:var(--text-secondary);font-weight:600;">${rank.totalStudents} জনের মধ্যে</p></div></div>
+        <div style="text-align:right;"><p style="font-size:1.1rem;font-weight:900;color:var(--color-accent);font-family:var(--font-num);">${rank.totalPoints}</p><p style="font-size:.7rem;color:var(--text-muted);font-weight:700;">মোট পয়েন্ট</p></div>
+      </div>` : `<div class="glass-card text-center text-muted text-sm font-bold">র‍্যাঙ্কের জন্য আরও পরীক্ষা দাও।</div>`;
+  } catch { topperEl.innerHTML=""; }
+}
+
+async function loadStats() {
+  const statsEl = document.getElementById("statsSection");
+  try {
+    const results = await getApprovedResults(student.studentId);
+    const overall = computeOverallStats(results);
+
+    if (!overall) {
+      statsEl.innerHTML = `<div class="glass-card text-center text-muted font-bold">কোনো পরীক্ষার ফলাফল নেই।</div>`;
+      return;
+    }
+
+    statsEl.innerHTML = `
+      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">সার্বিক পরিসংখ্যান</p>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-val">${overall.examsTaken}</div>
+          <div class="stat-lbl">মোট পরীক্ষা</div>
+        </div>
+        <div class="stat-box" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+          <div class="stat-val" style="color:#10b981;">${overall.avgPercentage ?? "—"}%</div>
+          <div class="stat-lbl">গড় স্কোর</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">${overall.avgAccuracy ?? "—"}%</div>
+          <div class="stat-lbl">সঠিকতার হার</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">${overall.totalCorrect}</div>
+          <div class="stat-lbl">সঠিক উত্তর</div>
+        </div>
+      </div>
+    `;
+    
+    const subjects = await getSubjects();
+    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
+
+    if (subjectStats.length > 0) {
+      const sHtml = subjectStats.map(s => `
+        <div class="glass-card" style="padding:16px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-weight:800; font-size:0.95rem; color:var(--text-secondary);">${s.name}</span>
+            <span style="font-weight:900; color:var(--color-accent); font-family:var(--font-num);">${s.accuracy ?? "—"}%</span>
+          </div>
+          <div style="width:100%; height:6px; background:rgba(128,128,128,0.15); border-radius:99px; overflow:hidden;">
+            <div style="width:${s.accuracy ?? 0}%; height:100%; background:var(--color-accent); border-radius:99px;"></div>
+          </div>
+        </div>
+      `).join("");
+      statsEl.innerHTML += `<p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin:20px 0 12px;">বিষয়ভিত্তিক পারফরম্যান্স</p>` + sHtml;
+    }
+
+  } catch (err) {
+    statsEl.innerHTML = `<div class="text-center text-muted">তথ্য লোড করা যায়নি।</div>`;
+  }
+}
+
+async function loadNetworkData() {
+  try {
+    const [students, fIds, inc, out] = await Promise.all([
+      getActiveStudents(), getMyFriendIds(student.studentId),
+      getIncomingRequests(student.studentId), getOutgoingRequests(student.studentId)
+    ]);
+    allNetStudents = students; friendIds = fIds; incomingReqs = inc; outgoingReqs = out;
+    dirBatchFilter = student.className || "all";
+    renderReqsAndFriends();
+    renderDirectoryFilters();
+    renderDirectory();
+  } catch (err) {}
+}
+
+function renderReqsAndFriends() {
+  const el = document.getElementById("reqAndFriendsSection");
+  const nameOf = {}; allNetStudents.forEach(s => { nameOf[s.studentId] = s.name; });
+
+  let html = "";
+  if (incomingReqs.length > 0) {
+    html += `
+      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">বন্ধুত্বের অনুরোধ</p>
+      <div class="glass-card" style="padding:12px;">
+        ${incomingReqs.map(r => `
+          <div class="dir-row" style="background:var(--surface);">
+            <span class="dir-name">${nameOf[r.fromStudentId] || r.fromStudentId}</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-secondary req-reject btn-sm" data-id="${r.id}">বাতিল</button>
+              <button class="btn-primary req-accept btn-sm" data-id="${r.id}" style="width:auto;">গ্রহণ</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  html += `
+    <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">আমার বন্ধুরা (${friendIds.length}/${MAX_FRIENDS})</p>
+    <div class="glass-card" style="padding:12px;">
+      ${friendIds.length === 0
+        ? `<p class="text-sm text-center text-muted font-bold" style="padding:10px;">এখনো কোনো বন্ধু যোগ হয়নি।</p>`
+        : friendIds.map(fid => `
+          <div class="dir-row" style="background:var(--surface);">
+            <span class="dir-name">${nameOf[fid] || fid}</span>
+            <button class="btn-secondary friend-remove btn-sm" data-id="${fid}" style="border-color:rgba(239,68,68,0.3); color:#ef4444;">সরাও</button>
+          </div>
+        `).join("")}
+    </div>
+  `;
+
+  el.innerHTML = html;
+  el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => { try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("যুক্ত হলো", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); } }));
+  el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => { try { await rejectFriendRequest(b.dataset.id); await loadNetworkData(); } catch(e){} }));
+  el.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => { if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return; try { await removeFriend(student.studentId, b.dataset.id); showToast("সরানো হয়েছে", "success"); await loadNetworkData(); } catch(e){} }));
+}
+
+function renderDirectoryFilters() {
+  const filterEl = document.getElementById("dirFilters");
+  const batches = [...new Set(allNetStudents.map(s => s.className || "Other"))].sort();
+  filterEl.innerHTML = `<div class="chip ${dirBatchFilter === "all" ? "active" : ""}" data-batch="all">সব ব্যাচ</div>` + batches.map(b => `<div class="chip ${dirBatchFilter === b ? "active" : ""}" data-batch="${b}">${b}</div>`).join("");
+  filterEl.querySelectorAll(".chip").forEach(chip => { chip.addEventListener("click", () => { dirBatchFilter = chip.dataset.batch; renderDirectoryFilters(); renderDirectory(); }); });
+}
+
+function renderDirectory() {
+  const dirList = document.getElementById("dirList");
+  let filtered = allNetStudents.filter(s => s.studentId !== student.studentId);
+  if (dirBatchFilter !== "all") filtered = filtered.filter(s => (s.className || "Other") === dirBatchFilter);
+  if (dirSearchTerm !== "") filtered = filtered.filter(s => s.name.toLowerCase().includes(dirSearchTerm));
+
+  if (filtered.length === 0) { dirList.innerHTML = `<p class="text-sm text-center text-muted font-bold" style="padding:20px;">কাউকে পাওয়া যায়নি।</p>`; return; }
+
+  dirList.innerHTML = filtered.map(s => {
+    const isFriend = friendIds.includes(s.studentId);
+    const isIncoming = incomingReqs.find(r => r.fromStudentId === s.studentId);
+    const isOutgoing = outgoingReqs.find(r => r.toStudentId === s.studentId);
+
+    let actionBtn = '';
+    if (isFriend) actionBtn = `<span class="status-badge badge-friend">বন্ধু</span>`;
+    else if (isIncoming) actionBtn = `<button class="btn-primary req-accept btn-sm" data-id="${isIncoming.id}" style="width:auto;">গ্রহণ করুন</button>`;
+    else if (isOutgoing) actionBtn = `<span class="status-badge badge-pending">অপেক্ষমাণ</span>`;
+    else actionBtn = `<button class="btn-secondary send-req btn-sm" data-sid="${s.studentId}">+ যোগ করো</button>`;
+
+    return `
+      <div class="dir-row">
+        <div><div class="dir-name">${s.name} <span class="dir-batch">${s.className || "N/A"}</span></div></div>
+        <div style="flex-shrink:0;">${actionBtn}</div>
+      </div>
+    `;
+  }).join("");
+
+  dirList.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => { try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("যুক্ত হলো", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); } }));
+  dirList.querySelectorAll(".send-req").forEach(b => b.addEventListener("click", async () => { const btn = b; const originalText = btn.textContent; btn.disabled = true; btn.textContent = "..."; try { await sendFriendRequest(student.studentId, btn.dataset.sid); showToast("অনুরোধ পাঠানো হয়েছে!", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); btn.disabled = false; btn.textContent = originalText; } }));
+}
+
+// ==========================================
+// SHARE PROFILE CARD LOGIC (Updated to focus on Points and Badges, no %)
+// ==========================================
+function openShareChoice(studentData) {
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+  overlay.innerHTML = `
+    <div class="glass-card" style="max-width:380px;width:100%;text-align:center;background:var(--surface);">
+      <p style="font-weight:900; font-size:1.1rem; margin-bottom:8px;">শেয়ার ফরম্যাট</p>
+      <p class="text-xs text-muted mb-4" style="line-height:1.5;">ছবি (PNG) সরাসরি WhatsApp-এ পাঠানো যায়। প্রিন্ট বা সেভ করতে PDF বেছে নাও।</p>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn-secondary" id="choosePngBtn" style="flex:1;">ছবি (PNG)</button>
+        <button type="button" class="btn-primary" id="choosePdfBtn" style="flex:1; width:auto;">PDF</button>
+      </div>
+      <button type="button" class="btn-secondary mt-3" id="shareChoiceCancelBtn" style="width:100%; border:none; background:transparent;">বাতিল করুন</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#shareChoiceCancelBtn").addEventListener("click", () => overlay.remove());
+  overlay.querySelector("#choosePngBtn").addEventListener("click", () => { overlay.remove(); generateProfileCard(studentData, "png"); });
+  overlay.querySelector("#choosePdfBtn").addEventListener("click", () => { overlay.remove(); generateProfileCard(studentData, "pdf"); });
+}
+
+async function buildProfileCardHtml(studentData) {
+  // Fetch Real Rank/Points and Badges
+  const rank = await getStudentRank(student.studentId);
+  const totalPoints = rank?.totalPoints || 0;
+  
+  const gData = await computeGamificationData();
+  const examCount = gData.examCounts?.[student.studentId] || 0;
+  let claimedBadgeNames = [];
+  try {
+    const [results, subjectsSnap, chaptersSnap, topicsSnap] = await Promise.all([
+      getApprovedResults(student.studentId),
+      getDocs(collection(db, "subjects")),
+      getDocs(collection(db, "chapters")),
+      getDocs(collection(db, "topics"))
+    ]);
+    const subjectMap={}, chapterMap={}, topicMap={};
+    subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id});
+    chaptersSnap.forEach(d=>{const x=d.data();chapterMap[d.id]=x.name_bn||x.name_en||d.id});
+    topicsSnap.forEach(d=>{const x=d.data();topicMap[d.id]=x.name_bn||x.name_en||d.id});
+    const subjectStats=computeSubjectStats(results,subjectMap).map(x=>({...x,id:x.subjectId}));
+    const chapterStats=computeChapterStats(results,chapterMap).map(x=>({...x,id:x.chapterId}));
+    const topicStats=computeTopicStats(results,topicMap).map(x=>({...x,id:x.topicId}));
+    const ctx=getBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);
+    claimedBadgeNames=buildBadgeCatalog(ctx).filter(b=>b.check(ctx)).map(b=>b.title);
+  } catch {}
+  const totalBadges = claimedBadgeNames.length;
+  const photoURL = studentData.photoURL || null;
+  const badgeColor = "#4ade80"; 
+
+  return `
+    <div id="profileCardInner" style="width:400px;font-family:'Noto Sans Bengali',sans-serif;background:linear-gradient(160deg,#0b0f1a 0%,#1a1024 55%,#2b1608 100%);color:#ffffff;border-radius:26px;overflow:hidden;">
+      <div style="padding:34px 28px 22px;text-align:center;">
+        <p style="margin:0;line-height:1.4;font-size:12px;text-transform:uppercase;color:#ffb38a;font-weight:700;">পরীক্ষা প্রস্তুতি — স্টুডেন্ট কার্ড</p>
+        ${photoURL ? `<img src="${photoURL}" crossorigin="anonymous" style="width:104px;height:104px;border-radius:50%;object-fit:cover;margin:18px auto 14px;display:block;border:3px solid ${badgeColor};">` : `<div style="width:104px;height:104px;border-radius:50%;margin:18px auto 14px;background:${badgeColor};display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;color:#0b0f1a;">${(student.name || "?").charAt(0)}</div>`}
+        <h1 style="margin:0;line-height:1.15;font-size:32px;font-weight:900;color:#ffffff;">${student.name}</h1>
+        <div style="margin-top:10px;">
+          <span style="display:inline-block;padding:4px 14px;border-radius:999px;background:rgba(255,255,255,0.1);color:#cbd5e1;font-size:12px;font-weight:700;">${studentData.className || "অজানা ব্যাচ"} • ${student.studentId}</span>
+        </div>
+      </div>
+      
+      <div style="margin:0 20px;background:rgba(255,255,255,0.07);border-radius:18px;padding:22px;text-align:center;border:1px solid rgba(255,255,255,0.12);">
+        <p style="margin:0;font-size:54px;font-weight:900;color:#ff8a3d;font-family:sans-serif;line-height:1;">${totalPoints}</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#cbd5e1;font-weight:700;">সর্বমোট অর্জিত পয়েন্ট</p>
+      </div>
+      
+      <div style="display:flex;gap:10px;margin:16px 20px 0;">
+        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
+          <p style="margin:0;line-height:1.3;font-size:20px;font-weight:800;color:#ffffff;">${totalBadges} টি</p>
+          <p style="margin:4px 0 0;line-height:1.3;font-size:12px;color:#94a3b8;font-weight:600;">ব্যাজ কালেকশন</p>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
+          <p style="margin:0;line-height:1.3;font-size:20px;font-weight:800;color:#ffffff;">${examCount} বার</p>
+          <p style="margin:4px 0 0;line-height:1.3;font-size:12px;color:#94a3b8;font-weight:600;">পরীক্ষা দিয়েছে</p>
+        </div>
+      </div>
+      ${claimedBadgeNames.length ? `
+      <div style="margin:16px 20px 0;padding:12px 14px;background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.10);border-radius:16px;">
+        <p style="margin:0 0 9px;font-size:11px;color:#cbd5e1;font-weight:800;text-align:left;">অর্জিত ব্যাজ</p>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;">
+          ${claimedBadgeNames.slice(0,8).map(name => `<span style="padding:6px 9px;border-radius:999px;background:rgba(201,147,53,.18);border:1px solid rgba(201,147,53,.28);color:#f4c66b;font-size:10px;font-weight:800;">${name}</span>`).join("")}
+        </div>
+      </div>` : ""}
+
+      <p style="text-align:center;margin:24px 0 24px;font-size:11px;color:#64748b;font-weight:600;">অফিসিয়াল রিপোর্ট • ${new Date().toLocaleDateString("bn-BD")}</p>
+    </div>
+  `;
+  }
+
+  async function generateProfileCard(studentData, format) {
+  const btn = document.getElementById("shareProfileBtn");
+  const originalText = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = "কার্ড তৈরি হচ্ছে...";
+
+  try {
+    const area = document.getElementById("shareCardArea");
+    area.innerHTML = await buildProfileCardHtml(studentData);
+    const img = area.querySelector("img");
+    if (img && !img.complete) await new Promise(res => { img.onload = res; img.onerror = res; });
+
+    const canvas = await html2canvas(document.getElementById("profileCardInner"), { scale: 2, backgroundColor: null, useCORS: true });
+    const fileNameBase = `${student.name}_প্রোফাইল`.replace(/\s+/g, "_");
+
+    let file, dataUrl;
+    if (format === "png") {
+      dataUrl = canvas.toDataURL("image/png");
+      const blob = await (await fetch(dataUrl)).blob();
+      file = new File([blob], `${fileNameBase}.png`, { type: "image/png" });
+    } else {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: "px", format: [canvas.width / 2, canvas.height / 2] });
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      const blob = pdf.output("blob");
+      file = new File([blob], `${fileNameBase}.pdf`, { type: "application/pdf" });
+      dataUrl = URL.createObjectURL(blob);
+    }
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: fileNameBase }); return; } catch {}
+    }
+    const a = document.createElement("a"); a.href = dataUrl; a.download = file.name; a.click();
+  } catch (err) {
+    showToast("কার্ড তৈরি করা যায়নি।", "error");
+  } finally {
+    btn.disabled = false; btn.innerHTML = originalText;
+  }
+}
+</script>
+</body>
+</html>

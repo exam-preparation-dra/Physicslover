@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পরীক্ষার ইতিহাস — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 600px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Premium Glass Cards (Uniform Borders) ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02);
+  }
+
+  /* ===== Summary Grid ===== */
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .summary-box { 
+    background: rgba(128, 128, 128, 0.03); border: 1px solid rgba(128, 128, 128, 0.12); 
+    border-radius: 16px; padding: 16px 10px; text-align: center; 
+    display: flex; flex-direction: column; justify-content: center; align-items: center; 
+  }
+  .sum-val { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-num); line-height: 1.2; }
+  .sum-lbl { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); margin-top: 4px; }
+  
+  .sum-box-highlight { 
+    background: rgba(var(--color-accent-rgb), 0.05); 
+    border-color: rgba(var(--color-accent-rgb), 0.2); 
+  }
+  .sum-box-highlight .sum-val { color: var(--color-accent); }
+
+  /* ===== History List Cards (Transparent Glassmorphism) ===== */
+  .history-card {
+    display: block; background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 16px; padding: 16px; margin-bottom: 12px; 
+    text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .history-card:active { transform: scale(0.97); }
+  
+  .hc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .hc-title { font-size: 1.05rem; font-weight: 800; color: var(--text-primary); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hc-points { background: rgba(var(--color-accent-rgb), 0.1); color: var(--color-accent); border: 1px solid rgba(var(--color-accent-rgb), 0.2); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap; font-family: var(--font-num); flex-shrink: 0; }
+
+  .hc-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+
+  .hc-stats { display: flex; gap: 10px; border-top: 1px dashed rgba(128,128,128,0.15); padding-top: 12px; }
+  .hc-stat-box { flex: 1; background: rgba(128,128,128,0.04); border-radius: 10px; padding: 8px 6px; text-align: center; }
+  .hc-val { display: block; font-size: 1rem; font-weight: 900; color: var(--text-secondary); font-family: var(--font-num); }
+  .hc-lbl { display: block; font-size: 0.65rem; font-weight: 700; color: var(--text-muted); margin-top: 2px; }
+  
+  .stat-pct .hc-val { color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
+import { getApprovedResults, getStudentRank } from "../js/utils/results-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) student = fresh;
+    renderPage();
+  });
+}
+
+function fmtDate(ts) {
+  return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—";
+}
+
+async function renderPage() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "history")}
+    <div id="bodyContent" class="mt-4"><div class="spinner" style="margin:40px auto;"></div></div>
+  `;
+
+  const bodyContent = document.getElementById("bodyContent");
+
+  try {
+    // Fetch user results & Exact Leaderboard Points
+    const [results, rankData] = await Promise.all([
+      getApprovedResults(student.studentId),
+      getStudentRank(student.studentId)
+    ]);
+    
+    // Fetch all exams to calculate total exams conducted for this batch
+    const examsSnap = await getDocs(collection(db, "exams"));
+    let totalExamsConducted = 0;
+    
+    examsSnap.forEach(doc => {
+      const data = doc.data();
+      const validStatus = ["published", "completed", "archived"].includes(data.status);
+      
+      // Check if exam is for this student's batch (or open to all)
+      let isForMe = true; 
+      if (data.targetBatch && data.targetBatch !== "all" && data.targetBatch !== student.className) isForMe = false;
+      if (data.targetBatches && data.targetBatches.length > 0 && !data.targetBatches.includes(student.className)) isForMe = false;
+      
+      if (validStatus && isForMe) {
+        totalExamsConducted++;
+      }
+    });
+
+    // Fallback sanity check (cannot attend more than total)
+    if (totalExamsConducted < results.length) totalExamsConducted = results.length;
+
+    // Use Leaderboard Real Points System
+    const totalPoints = rankData?.totalPoints || 0;
+
+    // Header Summary
+    const summaryHtml = `
+      <div class="glass-card" style="padding: 20px 16px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">আপনার রিপোর্ট কার্ড</span>
+        </div>
+        
+        <div class="summary-grid">
+          <div class="summary-box">
+            <span class="sum-val">${totalExamsConducted}</span>
+            <span class="sum-lbl">মোট পরীক্ষা</span>
+          </div>
+          <div class="summary-box">
+            <span class="sum-val">${results.length}</span>
+            <span class="sum-lbl">অ্যাটেন্ড করেছে</span>
+          </div>
+          <div class="summary-box sum-box-highlight">
+            <span class="sum-val">${totalPoints}</span>
+            <span class="sum-lbl">সর্বমোট পয়েন্ট</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Empty State Check
+    if (results.length === 0) {
+      bodyContent.innerHTML = summaryHtml + `<div class="glass-card text-center" style="color:var(--text-muted); font-weight:700;">এখনো কোনো অনুমোদিত পরীক্ষার ফলাফল নেই।</div>`;
+      return;
+    }
+
+    // Sort results by newest first
+    results.sort((a, b) => (b.submittedAt?.toMillis?.() ?? 0) - (a.submittedAt?.toMillis?.() ?? 0));
+
+    // List Generation
+    const listHtml = results.map(r => {
+      // Individual exam points
+      const pts = Number(r.points || r.earnedPoints || r.score || r.obtainedMarks || 0);
+      const totalQ = (r.correctCount || 0) + (r.wrongCount || 0) + (r.unansweredCount || 0);
+      
+      return `
+        <a href="../student/result.html?resultId=${r.id}" class="history-card">
+          <div class="hc-header">
+            <div class="hc-title">${r.examName || "অজানা পরীক্ষা"}</div>
+            <div class="hc-points">+${pts} pts</div>
+          </div>
+          <div class="hc-meta">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${fmtDate(r.submittedAt)}
+          </div>
+          
+          <div class="hc-stats">
+            <div class="hc-stat-box stat-pct">
+              <span class="hc-val">${r.percentage ?? "—"}%</span>
+              <span class="hc-lbl">স্কোর</span>
+            </div>
+            <div class="hc-stat-box">
+              <span class="hc-val">${r.accuracy ?? "—"}%</span>
+              <span class="hc-lbl">সঠিকতা</span>
+            </div>
+            <div class="hc-stat-box">
+              <span class="hc-val" style="color:#10b981;">${r.correctCount || 0}/${totalQ > 0 ? totalQ : '-'}</span>
+              <span class="hc-lbl">সঠিক উত্তর</span>
+            </div>
+          </div>
+        </a>
+      `;
+    }).join("");
+
+    bodyContent.innerHTML = summaryHtml + `<div style="font-weight:900; font-size:1.05rem; color:var(--text-primary); margin-bottom:12px; padding-left:4px;">পরীক্ষার তালিকা</div>` + listHtml;
+
+  } catch (err) {
+    console.error(err);
+    renderState(bodyContent, "error", "ইতিহাস লোড করা যায়নি। ইন্টারনেট সংযোগ চেক করুন।");
+  }
+}
+</script>
+</body>
+</html>
