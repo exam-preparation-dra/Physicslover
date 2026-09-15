@@ -1,7 +1,7 @@
 {
-  "name": "SubhajitPhysics",
-  "short_name": "SubhajitPhysics",
-  "description": "SubhajitPhysics MCQ Platform",
+  "name": "Physics Lover 2.0",
+  "short_name": "PhysicsLover",
+  "description": "Physics Lover 2.0 MCQ Platform",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
