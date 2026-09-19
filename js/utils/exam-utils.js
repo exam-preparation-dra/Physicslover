@@ -1,7 +1,5 @@
 /* =========================================================
    EXAM UTILITIES (admin-facing create/edit/publish)
-   Matches `exams/{examId}` and `examSnapshots/{examId}` in
-   firestore-schema.md exactly.
    ========================================================= */
 import { db } from "../firebase/firebase-config.js";
 import {
@@ -10,20 +8,25 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getQuestionsByIds } from "./question-utils.js";
 
-// ---------- Create a new exam (status: draft) ----------
+// ---------- Create a new exam ----------
 export async function createExam(data) {
   const totalMarks = (data.questionIds?.length || 0) * (data.marksPerQuestion || 1);
   return addDoc(collection(db, "exams"), {
     name: data.name,
     description: data.description || "",
     examDate: data.examDate ? Timestamp.fromDate(new Date(data.examDate)) : null,
+    // নতুন যুক্ত হওয়া ফিল্ডগুলো:
+    publishDate: data.publishDate ? Timestamp.fromDate(new Date(data.publishDate)) : serverTimestamp(),
+    targetBatch: data.targetBatch || "all", 
+    allowedStudents: data.allowedStudents || [], 
+    
     informationalTime: data.informationalTime || "",
     durationMinutes: data.durationMinutes,
     marksPerQuestion: data.marksPerQuestion || 1,
     totalMarks,
     subjectIds: data.subjectIds || [],
     chapterIds: data.chapterIds || [],
-    questionIds: data.questionIds || [],   // ordered — no randomization (requirement #9)
+    questionIds: data.questionIds || [],
     negativeMarking: false,
     status: "draft",
     createdAt: serverTimestamp(),
@@ -31,7 +34,7 @@ export async function createExam(data) {
   });
 }
 
-// ---------- Update a draft/upcoming exam (blocked once published — see below) ----------
+// ---------- Update a draft/upcoming exam ----------
 export async function updateExam(examId, data) {
   const exam = await getExamById(examId);
   if (!exam) throw new Error("পরীক্ষা পাওয়া যায়নি।");
@@ -44,35 +47,27 @@ export async function updateExam(examId, data) {
     ...data,
     totalMarks,
     examDate: data.examDate ? Timestamp.fromDate(new Date(data.examDate)) : exam.examDate,
+    publishDate: data.publishDate ? Timestamp.fromDate(new Date(data.publishDate)) : exam.publishDate,
+    targetBatch: data.targetBatch || exam.targetBatch || "all",
+    allowedStudents: data.allowedStudents || exam.allowedStudents || [],
     updatedAt: serverTimestamp()
   });
 }
 
-// ---------- Delete/archive a draft (never delete a published exam — historical integrity) ----------
 export async function deleteDraftExam(examId) {
   const exam = await getExamById(examId);
   if (!exam) return;
-  if (exam.status !== "draft") {
-    throw new Error("শুধুমাত্র খসড়া (draft) পরীক্ষা মুছে ফেলা যায়। প্রকাশিত পরীক্ষা archive করুন।");
-  }
+  if (exam.status !== "draft") throw new Error("শুধুমাত্র খসড়া (draft) পরীক্ষা মুছে ফেলা যায়।");
   return deleteDoc(doc(db, "exams", examId));
 }
 
-// ---------- Permanently delete ANY exam (draft, published, completed — any status),
-// along with every record tied to it: the frozen question snapshot, every
-// student's attempt, and every student's result for this exam. This is the
-// admin's explicit "delete this exam and wipe its history" action — unlike
-// deleteDraftExam above, it does NOT preserve historical integrity, by design.
-// There is no undo once this runs. ----------
 export async function deleteExamPermanently(examId) {
   const exam = await getExamById(examId);
   if (!exam) return;
-
   const [attemptsSnap, resultsSnap] = await Promise.all([
     getDocs(query(collection(db, "attempts"), where("examId", "==", examId))),
     getDocs(query(collection(db, "results"), where("examId", "==", examId)))
   ]);
-
   const batch = writeBatch(db);
   attemptsSnap.docs.forEach(d => batch.delete(d.ref));
   resultsSnap.docs.forEach(d => batch.delete(d.ref));
@@ -85,7 +80,6 @@ export async function archiveExam(examId) {
   return updateDoc(doc(db, "exams", examId), { status: "archived", updatedAt: serverTimestamp() });
 }
 
-// ---------- Duplicate an existing exam (requirement #26) ----------
 export async function duplicateExam(examId) {
   const source = await getExamById(examId);
   if (!source) throw new Error("মূল পরীক্ষা পাওয়া যায়নি।");
@@ -100,18 +94,12 @@ export async function duplicateExam(examId) {
   return docRef.id;
 }
 
-// ---------- Read ----------
 export async function getExamById(examId) {
   const snap = await getDoc(doc(db, "exams", examId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
 export async function getAllExams({ status = null } = {}) {
-  // NOTE: no Firestore orderBy() when a status filter is applied — equality
-  // filter + orderBy on a different field needs a composite index that
-  // doesn't exist here, and a missing index makes the query fail instead of
-  // just returning results (see results-utils.js / syllabus-utils.js for the
-  // same fix). Sort client-side so no index is ever required.
   const clauses = [];
   if (status) clauses.push(where("status", "==", status));
   if (!status) clauses.push(orderBy("createdAt", "desc"));
@@ -120,62 +108,26 @@ export async function getAllExams({ status = null } = {}) {
   return status ? items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)) : items;
 }
 
-// ---------- LIVE SYNC: real-time listener for the exam list (fixes the
-// "student has to refresh to see a newly-created exam" issue). Call this
-// from the student-side page instead of getAllExams() when the list needs
-// to stay live. It fires immediately with the current data, then again
-// every time an exam is added/edited/removed/status-changed on the server —
-// no page refresh needed.
-//
-// Usage (in the student page that lists exams):
-//   const unsubscribe = subscribeToExams({ status: "published" }, (exams) => {
-//     renderExamList(exams);
-//   });
-//   // call unsubscribe() when leaving the page (optional, but tidy)
-//
-// Returns an `unsubscribe` function.
 export function subscribeToExams({ status = null } = {}, onChange, onError) {
   const clauses = [];
   if (status) clauses.push(where("status", "==", status));
   if (!status) clauses.push(orderBy("createdAt", "desc"));
-
   const q = query(collection(db, "exams"), ...clauses);
-
   return onSnapshot(
     q,
     (snap) => {
       let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (status) {
-        // Same client-side sort as getAllExams() — no composite index needed.
-        items = items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
-      }
+      if (status) items = items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
       onChange(items);
     },
-    (err) => {
-      console.error("subscribeToExams error:", err);
-      if (onError) onError(err);
-    }
+    (err) => { console.error(err); if (onError) onError(err); }
   );
 }
 
-// ---------- LIVE SYNC: real-time listener for a single exam document.
-// Useful on the admin's exams.html list / exam-edit.html so a status change
-// (e.g. published -> active) reflects instantly without a manual reload. ----------
 export function subscribeToExamById(examId, onChange, onError) {
-  return onSnapshot(
-    doc(db, "exams", examId),
-    (snap) => onChange(snap.exists() ? { id: snap.id, ...snap.data() } : null),
-    (err) => {
-      console.error("subscribeToExamById error:", err);
-      if (onError) onError(err);
-    }
-  );
+  return onSnapshot(doc(db, "exams", examId), (snap) => onChange(snap.exists() ? { id: snap.id, ...snap.data() } : null), onError);
 }
 
-// ---------- PUBLISH: freeze an immutable question snapshot, then flip status.
-// This is the single most important integrity step in the whole system —
-// after this point, editing/deleting a question in the bank must never
-// change what this exam's students see or how their results are graded. ----------
 export async function publishExam(examId) {
   const exam = await getExamById(examId);
   if (!exam) throw new Error("পরীক্ষা পাওয়া যায়নি।");
@@ -183,39 +135,24 @@ export async function publishExam(examId) {
   if (!exam.questionIds || exam.questionIds.length === 0) throw new Error("প্রকাশ করার আগে অন্তত একটি প্রশ্ন যোগ করুন।");
 
   const questions = await getQuestionsByIds(exam.questionIds);
-  // Preserve exact admin-selected order, not Firestore fetch order.
   const orderedQuestions = exam.questionIds
-    .map(id => questions.find(q => q.id === id))
-    .filter(Boolean)
+    .map(id => questions.find(q => q.id === id)).filter(Boolean)
     .map(q => ({
-      questionId: q.id,
-      question_en: q.question_en,
-      question_bn: q.question_bn,
-      options_bn: q.options_bn,
-      correctAnswer: q.correctAnswer,
-      marks: exam.marksPerQuestion || q.marks || 1,
-      subjectId: q.subjectId,
-      chapterId: q.chapterId,
-      topicId: q.topicId,
-      imageUrl: q.imageUrl || null,
+      questionId: q.id, question_en: q.question_en, question_bn: q.question_bn,
+      options_bn: q.options_bn, correctAnswer: q.correctAnswer,
+      marks: exam.marksPerQuestion || q.marks || 1, subjectId: q.subjectId,
+      chapterId: q.chapterId, topicId: q.topicId, imageUrl: q.imageUrl || null,
       explanation_bn: q.explanation_bn || null
     }));
 
   if (orderedQuestions.length !== exam.questionIds.length) {
-    throw new Error("কিছু নির্বাচিত প্রশ্ন প্রশ্ন ব্যাংকে আর পাওয়া যাচ্ছে না। প্রকাশের আগে তালিকা যাচাই করুন।");
+    throw new Error("কিছু নির্বাচিত প্রশ্ন প্রশ্ন ব্যাংকে আর পাওয়া যাচ্ছে না।");
   }
 
-  await setDoc(doc(db, "examSnapshots", examId), {
-    examId,
-    questions: orderedQuestions,
-    lockedAt: serverTimestamp()
-  });
-
+  await setDoc(doc(db, "examSnapshots", examId), { examId, questions: orderedQuestions, lockedAt: serverTimestamp() });
   await updateDoc(doc(db, "exams", examId), { status: "published", updatedAt: serverTimestamp() });
 }
 
-// ---------- Marks calculation preview (used live while admin is building the exam) ----------
 export function calculateTotalMarks(questionCount, marksPerQuestion) {
   return (questionCount || 0) * (marksPerQuestion || 0);
 }
-   
