@@ -193,6 +193,7 @@ import { getFullSyllabusTree, buildNameMap } from "../js/utils/syllabus-utils.js
 import { getQuestionsByIds, addQuestion } from "../js/utils/question-utils.js";
 import { createExam, updateExam, getExamById, calculateTotalMarks } from "../js/utils/exam-utils.js";
 import { generateQuestionsFromImage, parseAiImportText, promptForApiKey, fileToImagePart } from "../js/utils/ai-import-utils.js";
+import { getActiveStudents } from "../js/utils/student-utils.js"; // Added for Dynamic Batches
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -202,6 +203,7 @@ const editId = params.get("id");
 let tree = [];
 let selectedQuestions = []; 
 let existingExam = null;
+let activeStudentsList = []; // Array to store students for dynamic batches
 
 requireAdmin(async () => {
   shell.innerHTML = template();
@@ -229,7 +231,11 @@ requireAdmin(async () => {
   document.getElementById("addAiRowBtn").addEventListener("click", addAiRow);
   document.getElementById("aiGenerateBtn").addEventListener("click", handleAiGenerate);
 
+  // Load Syllabus Tree & Dynamic Batches
   tree = await getFullSyllabusTree();
+  activeStudentsList = await getActiveStudents();
+  
+  populateTargetBatch(); // Now fully dynamic!
   populateQuickAddSyllabus();
   addAiRow();
 
@@ -291,9 +297,7 @@ function template() {
         <div class="field">
           <label>লক্ষ্য ব্যাচ (Target Batch)</label>
           <select class="input-glass" id="examTargetBatch" required>
-            <option value="all">সকল ব্যাচ (সবার জন্য উন্মুক্ত)</option>
-            <option value="Batch 7-12">Batch 7-12</option>
-            <option value="onnano">অন্যান্য (onnano)</option>
+            <option value="all">লোড হচ্ছে...</option>
           </select>
         </div>
       </div>
@@ -310,7 +314,6 @@ function template() {
         <div class="field"><label>প্রতি প্রশ্নে নম্বর</label><input class="input-glass" type="number" min="1" id="marksPerQuestion" value="1" required></div>
       </div>
 
-      <!-- নতুন যুক্ত হওয়া সেকশন -->
       <div class="responsive-grid-2 mt-3" style="background:rgba(128,128,128,0.05); padding:16px; border-radius:12px; border:1px dashed var(--surface-border);">
         <div class="field" style="margin:0;">
            <label style="color:var(--color-accent);">পাবলিশ হওয়ার সময় (কবে থেকে দেখতে পাবে)</label>
@@ -365,6 +368,15 @@ function template() {
   `;
 }
 
+// ===== Dynamic Batch Loading =====
+function populateTargetBatch() {
+  const targetBatchDropdown = document.getElementById("examTargetBatch");
+  const registeredBatches = [...new Set(activeStudentsList.map(s => s.className).filter(Boolean))].sort();
+  
+  targetBatchDropdown.innerHTML = `<option value="all">সকল ব্যাচ (সবার জন্য উন্মুক্ত)</option>` + 
+      registeredBatches.map(b => `<option value="${b}">${b}</option>`).join("");
+}
+
 function fillFormFromExisting() {
   document.getElementById("examName").value = existingExam.name || "";
   document.getElementById("examDesc").value = existingExam.description || "";
@@ -372,7 +384,6 @@ function fillFormFromExisting() {
     document.getElementById("examDate").value = existingExam.examDate.toDate().toISOString().slice(0, 10);
   }
   
-  // পাবলিশ ডেট ফর্মে বসানো
   if (existingExam.publishDate?.toDate) {
     const pd = existingExam.publishDate.toDate();
     pd.setMinutes(pd.getMinutes() - pd.getTimezoneOffset());
@@ -384,7 +395,6 @@ function fillFormFromExisting() {
   document.getElementById("marksPerQuestion").value = existingExam.marksPerQuestion || 1;
   document.getElementById("examTargetBatch").value = existingExam.targetBatch || "all";
   
-  // নির্দিষ্ট স্টুডেন্টদের আইডি কমা দিয়ে ফর্মে বসানো
   document.getElementById("allowedStudents").value = (existingExam.allowedStudents || []).join(", ");
 }
 
@@ -657,7 +667,6 @@ async function handleSubmit(e) {
   const subjectIds = [...new Set(selectedQuestions.map(q => q.subjectId))];
   const chapterIds = [...new Set(selectedQuestions.map(q => q.chapterId))];
 
-  // স্টুডেন্ট আইডিগুলো কমা থেকে অ্যারেতে রূপান্তর
   const allowedStudentsStr = document.getElementById("allowedStudents").value.trim();
   const allowedStudentsArray = allowedStudentsStr ? allowedStudentsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
 
@@ -666,8 +675,8 @@ async function handleSubmit(e) {
     description: document.getElementById("examDesc").value.trim(),
     examDate: document.getElementById("examDate").value,
     
-    publishDate: document.getElementById("publishDate").value, // নতুন
-    allowedStudents: allowedStudentsArray, // নতুন
+    publishDate: document.getElementById("publishDate").value,
+    allowedStudents: allowedStudentsArray,
     
     informationalTime: document.getElementById("examTime").value.trim(),
     durationMinutes: Number(document.getElementById("examDuration").value),
