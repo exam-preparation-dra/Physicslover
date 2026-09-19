@@ -1,5 +1,7 @@
 /* =========================================================
    EXAM UTILITIES (admin-facing create/edit/publish)
+   Matches `exams/{examId}` and `examSnapshots/{examId}` in
+   firestore-schema.md exactly.
    ========================================================= */
 import { db } from "../firebase/firebase-config.js";
 import {
@@ -8,25 +10,27 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getQuestionsByIds } from "./question-utils.js";
 
-// ---------- Create a new exam ----------
+// ---------- Create a new exam (status: draft) ----------
 export async function createExam(data) {
   const totalMarks = (data.questionIds?.length || 0) * (data.marksPerQuestion || 1);
   return addDoc(collection(db, "exams"), {
     name: data.name,
     description: data.description || "",
     examDate: data.examDate ? Timestamp.fromDate(new Date(data.examDate)) : null,
-    // নতুন যুক্ত হওয়া ফিল্ডগুলো:
+    
+    // --- নতুন যুক্ত হওয়া ফিল্ডগুলো ---
     publishDate: data.publishDate ? Timestamp.fromDate(new Date(data.publishDate)) : serverTimestamp(),
     targetBatch: data.targetBatch || "all", 
     allowedStudents: data.allowedStudents || [], 
-    
+    // ----------------------------------
+
     informationalTime: data.informationalTime || "",
     durationMinutes: data.durationMinutes,
     marksPerQuestion: data.marksPerQuestion || 1,
     totalMarks,
     subjectIds: data.subjectIds || [],
     chapterIds: data.chapterIds || [],
-    questionIds: data.questionIds || [],
+    questionIds: data.questionIds || [],   // ordered — no randomization
     negativeMarking: false,
     status: "draft",
     createdAt: serverTimestamp(),
@@ -47,27 +51,37 @@ export async function updateExam(examId, data) {
     ...data,
     totalMarks,
     examDate: data.examDate ? Timestamp.fromDate(new Date(data.examDate)) : exam.examDate,
+    
+    // --- আপডেট হওয়ার সময় নতুন ফিল্ডগুলো ---
     publishDate: data.publishDate ? Timestamp.fromDate(new Date(data.publishDate)) : exam.publishDate,
     targetBatch: data.targetBatch || exam.targetBatch || "all",
     allowedStudents: data.allowedStudents || exam.allowedStudents || [],
+    // -------------------------------------
+    
     updatedAt: serverTimestamp()
   });
 }
 
+// ---------- Delete/archive a draft ----------
 export async function deleteDraftExam(examId) {
   const exam = await getExamById(examId);
   if (!exam) return;
-  if (exam.status !== "draft") throw new Error("শুধুমাত্র খসড়া (draft) পরীক্ষা মুছে ফেলা যায়।");
+  if (exam.status !== "draft") {
+    throw new Error("শুধুমাত্র খসড়া (draft) পরীক্ষা মুছে ফেলা যায়। প্রকাশিত পরীক্ষা archive করুন।");
+  }
   return deleteDoc(doc(db, "exams", examId));
 }
 
+// ---------- Permanently delete ANY exam ----------
 export async function deleteExamPermanently(examId) {
   const exam = await getExamById(examId);
   if (!exam) return;
+
   const [attemptsSnap, resultsSnap] = await Promise.all([
     getDocs(query(collection(db, "attempts"), where("examId", "==", examId))),
     getDocs(query(collection(db, "results"), where("examId", "==", examId)))
   ]);
+
   const batch = writeBatch(db);
   attemptsSnap.docs.forEach(d => batch.delete(d.ref));
   resultsSnap.docs.forEach(d => batch.delete(d.ref));
@@ -80,6 +94,7 @@ export async function archiveExam(examId) {
   return updateDoc(doc(db, "exams", examId), { status: "archived", updatedAt: serverTimestamp() });
 }
 
+// ---------- Duplicate an existing exam ----------
 export async function duplicateExam(examId) {
   const source = await getExamById(examId);
   if (!source) throw new Error("মূল পরীক্ষা পাওয়া যায়নি।");
@@ -94,6 +109,7 @@ export async function duplicateExam(examId) {
   return docRef.id;
 }
 
+// ---------- Read ----------
 export async function getExamById(examId) {
   const snap = await getDoc(doc(db, "exams", examId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
@@ -108,26 +124,43 @@ export async function getAllExams({ status = null } = {}) {
   return status ? items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)) : items;
 }
 
+// ---------- LIVE SYNC (Multiple) ----------
 export function subscribeToExams({ status = null } = {}, onChange, onError) {
   const clauses = [];
   if (status) clauses.push(where("status", "==", status));
   if (!status) clauses.push(orderBy("createdAt", "desc"));
+
   const q = query(collection(db, "exams"), ...clauses);
+
   return onSnapshot(
     q,
     (snap) => {
       let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (status) items = items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+      if (status) {
+        items = items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+      }
       onChange(items);
     },
-    (err) => { console.error(err); if (onError) onError(err); }
+    (err) => {
+      console.error("subscribeToExams error:", err);
+      if (onError) onError(err);
+    }
   );
 }
 
+// ---------- LIVE SYNC (Single) ----------
 export function subscribeToExamById(examId, onChange, onError) {
-  return onSnapshot(doc(db, "exams", examId), (snap) => onChange(snap.exists() ? { id: snap.id, ...snap.data() } : null), onError);
+  return onSnapshot(
+    doc(db, "exams", examId),
+    (snap) => onChange(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+    (err) => {
+      console.error("subscribeToExamById error:", err);
+      if (onError) onError(err);
+    }
+  );
 }
 
+// ---------- PUBLISH ----------
 export async function publishExam(examId) {
   const exam = await getExamById(examId);
   if (!exam) throw new Error("পরীক্ষা পাওয়া যায়নি।");
@@ -136,23 +169,36 @@ export async function publishExam(examId) {
 
   const questions = await getQuestionsByIds(exam.questionIds);
   const orderedQuestions = exam.questionIds
-    .map(id => questions.find(q => q.id === id)).filter(Boolean)
+    .map(id => questions.find(q => q.id === id))
+    .filter(Boolean)
     .map(q => ({
-      questionId: q.id, question_en: q.question_en, question_bn: q.question_bn,
-      options_bn: q.options_bn, correctAnswer: q.correctAnswer,
-      marks: exam.marksPerQuestion || q.marks || 1, subjectId: q.subjectId,
-      chapterId: q.chapterId, topicId: q.topicId, imageUrl: q.imageUrl || null,
+      questionId: q.id,
+      question_en: q.question_en,
+      question_bn: q.question_bn,
+      options_bn: q.options_bn,
+      correctAnswer: q.correctAnswer,
+      marks: exam.marksPerQuestion || q.marks || 1,
+      subjectId: q.subjectId,
+      chapterId: q.chapterId,
+      topicId: q.topicId,
+      imageUrl: q.imageUrl || null,
       explanation_bn: q.explanation_bn || null
     }));
 
   if (orderedQuestions.length !== exam.questionIds.length) {
-    throw new Error("কিছু নির্বাচিত প্রশ্ন প্রশ্ন ব্যাংকে আর পাওয়া যাচ্ছে না।");
+    throw new Error("কিছু নির্বাচিত প্রশ্ন প্রশ্ন ব্যাংকে আর পাওয়া যাচ্ছে না। প্রকাশের আগে তালিকা যাচাই করুন।");
   }
 
-  await setDoc(doc(db, "examSnapshots", examId), { examId, questions: orderedQuestions, lockedAt: serverTimestamp() });
+  await setDoc(doc(db, "examSnapshots", examId), {
+    examId,
+    questions: orderedQuestions,
+    lockedAt: serverTimestamp()
+  });
+
   await updateDoc(doc(db, "exams", examId), { status: "published", updatedAt: serverTimestamp() });
 }
 
+// ---------- Marks calculation preview ----------
 export function calculateTotalMarks(questionCount, marksPerQuestion) {
   return (questionCount || 0) * (marksPerQuestion || 0);
 }
