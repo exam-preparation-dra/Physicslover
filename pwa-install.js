@@ -72,7 +72,17 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
         // স্টুডেন্ট Accept করলে বাটন লক করে 'লোডিং' দেখানো হবে
         deferredPrompt = null; 
         btn.disabled = true;
-        btn.innerHTML = `<div class="spinner" style="width:20px;height:20px;border-width:2.5px;margin-right:8px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;"></div> ইনস্টল হচ্ছে... অপেক্ষা করুন`;
+        
+        let timeLeft = 30; // 30 seconds timer
+        
+        const updateTimer = () => {
+            btn.innerHTML = `<div class="spinner" style="width:20px;height:20px;border-width:2.5px;margin-right:8px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;"></div> ইনস্টল হচ্ছে... (${timeLeft}s)`;
+            timeLeft--;
+            if (timeLeft >= 0) {
+                 setTimeout(updateTimer, 1000);
+            }
+        };
+        updateTimer();
     }
   });
 
@@ -100,4 +110,4 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
        btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg> ম্যানুয়ালি ইনস্টল করুন`;
     }
   }, 3000);
-    }
+}
