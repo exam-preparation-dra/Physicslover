@@ -1,8 +1,5 @@
 /* =========================================================
    RESULTS & EXAM READ UTILITIES (student-facing)
-   Matches collections defined in firestore-schema.md exactly.
-   Question snapshots / correct answers are never fetched here —
-   this file only reads exam metadata and already-graded results.
    ========================================================= */
 import { db } from "../firebase/firebase-config.js";
 import {
@@ -70,16 +67,27 @@ export async function getResultById(resultId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-// ---------- ADVANCED POINT SYSTEM ----------
-// Points = Sum of % + (Exams * 50) + (Total Correct Answers * 2)
+// ---------- ADVANCED POINT SYSTEM (XP CALCULATION) ----------
+// Total XP = (Obtained Marks * 10) + (Exams Taken * 50) + (Correct Answers * 5) + (100% Score Bonus * 100)
 export async function getLeaderboardData(studentsList) {
   const results = await getAllApprovedResults();
   const byStudent = {};
+  
   for (const r of results) {
-    if (!byStudent[r.studentId]) byStudent[r.studentId] = { pcts: [], correctCount: 0 };
-    byStudent[r.studentId].pcts.push(Number(r.percentage) || 0);
+    if (!byStudent[r.studentId]) {
+       byStudent[r.studentId] = { pcts: [], correctCount: 0, obtainedMarks: 0, perfectExams: 0 };
+    }
+    const percentage = Number(r.percentage) || 0;
+    byStudent[r.studentId].pcts.push(percentage);
     byStudent[r.studentId].correctCount += (Number(r.correctCount) || 0);
+    byStudent[r.studentId].obtainedMarks += (Number(r.obtainedMarks) || 0);
+    
+    // 100% মার্কস পেলে স্পেশাল বোনাস
+    if (percentage === 100) {
+       byStudent[r.studentId].perfectExams += 1;
+    }
   }
+  
   const infoOf = {};
   studentsList.forEach(s => { infoOf[s.studentId] = s; });
 
@@ -87,8 +95,13 @@ export async function getLeaderboardData(studentsList) {
     const sumPct = data.pcts.reduce((a, b) => a + b, 0);
     const avgPercentage = Math.round((sumPct / data.pcts.length) * 10) / 10;
     
-    // Dynamic Point Calculation
-    const totalPoints = Math.round(sumPct + (data.pcts.length * 50) + (data.correctCount * 2));
+    // Advanced XP Logic Application
+    const totalPoints = Math.round(
+      (data.obtainedMarks * 10) + 
+      (data.pcts.length * 50) + 
+      (data.correctCount * 5) + 
+      (data.perfectExams * 100)
+    );
     
     return {
       studentId,
@@ -111,17 +124,28 @@ export async function getStudentRank(studentId, classOf = null) {
 
   const byStudent = {};
   for (const r of all) {
-    if (!byStudent[r.studentId]) byStudent[r.studentId] = { pcts: [], correctCount: 0 };
-    byStudent[r.studentId].pcts.push(Number(r.percentage) || 0);
+    if (!byStudent[r.studentId]) {
+       byStudent[r.studentId] = { pcts: [], correctCount: 0, obtainedMarks: 0, perfectExams: 0 };
+    }
+    const percentage = Number(r.percentage) || 0;
+    byStudent[r.studentId].pcts.push(percentage);
     byStudent[r.studentId].correctCount += (Number(r.correctCount) || 0);
+    byStudent[r.studentId].obtainedMarks += (Number(r.obtainedMarks) || 0);
+    if (percentage === 100) byStudent[r.studentId].perfectExams += 1;
   }
 
   const stats = Object.entries(byStudent).map(([sid, data]) => {
     const sumPct = data.pcts.reduce((sum, p) => sum + p, 0);
+    const totalPoints = Math.round(
+      (data.obtainedMarks * 10) + 
+      (data.pcts.length * 50) + 
+      (data.correctCount * 5) + 
+      (data.perfectExams * 100)
+    );
     return {
       studentId: sid,
       average: sumPct / data.pcts.length,
-      totalPoints: Math.round(sumPct + (data.pcts.length * 50) + (data.correctCount * 2)) || 0
+      totalPoints: totalPoints || 0
     };
   });
 
@@ -185,4 +209,4 @@ export async function getChapterExamFrequencyMap(chapterIds) {
     });
   }
   return freq;
-     }
+}
