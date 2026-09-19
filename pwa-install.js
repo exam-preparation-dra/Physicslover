@@ -60,7 +60,7 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
   // বাটনে ক্লিক করার পর
   btn.addEventListener("click", async () => {
     if (!deferredPrompt) {
-       alert("আপনার ব্রাউজারে অটোমেটিক ইনস্টল সাপোর্ট নেই। দয়া করে ব্রাউজারের মেনু (⋮) থেকে 'Add to Home Screen' বা 'Install App'-এ ক্লিক করুন। iPhone ব্যবহারকারীরা Safari-এর Share বাটন থেকে 'Add to Home Screen' করুন।");
+       alert("আপনার ব্রাউজারে অটোমেটিক ইনস্টল সাপোর্ট নেই বা আপনি আগেই পপ-আপ কেটে দিয়েছেন। পেজটি একবার রিলোড করে আবার চেষ্টা করুন।");
        return;
     }
     
@@ -83,6 +83,10 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
             }
         };
         updateTimer();
+    } else {
+        // যদি ইউজার ইনস্টল না করে Cancel করে দেয়
+        deferredPrompt = null;
+        alert("আপনি ইনস্টল ক্যানসেল করেছেন। আবার ইনস্টল করতে চাইলে পেজটি রিফ্রেশ (Reload) করুন।");
     }
   });
 
@@ -110,4 +114,4 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
        btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg> ম্যানুয়ালি ইনস্টল করুন`;
     }
   }, 3000);
-}
+  }
