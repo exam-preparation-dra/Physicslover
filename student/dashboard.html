@@ -3,74 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>ড্যাশবোর্ড — পরীক্ষা প্রস্তুতি</title>
+<title>গেমার ড্যাশবোর্ড — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
+<!-- html2canvas for PNG Export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
-
   .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 
-  /* ===== Premium Glassmorphism Theme ===== */
-  .glass-float-card {
-    background: rgba(128, 128, 128, 0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 18px; padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+  /* ===== Next-Gen Gamer Profile Card ===== */
+  .gamer-profile-card {
+    background: linear-gradient(145deg, #111827, #1f2937); border: 1px solid #374151;
+    border-radius: 24px; padding: 24px; position: relative; overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3); color: #fff; margin-top: 16px;
   }
-  @media (hover: hover) { .glass-float-card:hover { transform: translateY(-5px); box-shadow: 0 15px 45px rgba(0, 0, 0, 0.06); } }
-
-  .btn-glass {
-    background: rgba(128, 128, 128, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(128, 128, 128, 0.15); border-radius: 14px; color: var(--text-primary);
-    padding: 12px; font-weight: 800; font-size: 0.85rem; text-align: center; flex: 1;
-    display: inline-flex; justify-content: center; align-items: center; gap: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.02); text-decoration: none; transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  .gamer-profile-card::before {
+    content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px;
+    background: radial-gradient(circle, var(--league-glow) 0%, transparent 70%);
+    opacity: 0.5; border-radius: 50%; pointer-events: none;
   }
-  .btn-glass:active { transform: scale(0.94); }
-  .btn-primary { background: linear-gradient(135deg, var(--color-accent), #f59e0b); color: #fff; border: none; box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.3); }
+  
+  .gp-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; position: relative; }
+  .gp-avatar-wrap { position: relative; width: 70px; height: 70px; }
+  .gp-avatar { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--league-color); object-fit: cover; background: #374151; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; }
+  .gp-level-badge { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background: var(--league-color); color: #fff; font-size: 0.65rem; font-weight: 900; padding: 3px 10px; border-radius: 10px; border: 2px solid #111827; white-space: nowrap; box-shadow: 0 4px 10px var(--league-glow); }
+  
+  .gp-identity { margin-top: 16px; position: relative; z-index: 2; }
+  .gp-name { font-size: 1.3rem; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 2px; }
+  .gp-id { font-size: 0.75rem; font-weight: 700; color: #9ca3af; letter-spacing: 1px; }
+  
+  .gp-xp-container { text-align: center; margin-top: 24px; position: relative; z-index: 2; }
+  .gp-xp-value { font-size: 3.5rem; font-weight: 900; font-family: var(--font-num); line-height: 1; text-shadow: 0 4px 20px rgba(0,0,0,0.5); background: linear-gradient(to bottom, #fff, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .gp-xp-label { font-size: 0.85rem; font-weight: 800; color: var(--league-color); text-transform: uppercase; letter-spacing: 2px; margin-top: 8px; }
 
-  /* ===== Live Countdown Timer ===== */
-  .countdown-container {
-    background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(37,99,235,0.02)); border: 1px solid rgba(37,99,235,0.2);
-    border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden;
+  /* ===== Shimmer Progress Bar ===== */
+  .shimmer-progress-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 99px; margin-top: 24px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.05); }
+  .shimmer-progress-fill { background: linear-gradient(90deg, var(--league-color), #fff); height: 100%; width: 0%; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1); border-radius: 99px; position: relative; }
+  .shimmer-progress-fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); animation: shimmerSlide 2s infinite; }
+  @keyframes shimmerSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  .gp-bonus-text { text-align: center; font-size: 0.75rem; font-weight: 700; color: #9ca3af; margin-top: 10px; }
+  .gp-bonus-highlight { color: #fbbf24; font-weight: 900; }
+
+  /* ===== 3D Action Buttons ===== */
+  .action-hub { display: flex; gap: 12px; margin-top: 16px; }
+  .btn-3d {
+    flex: 1; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px;
+    padding: 16px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    color: var(--text-primary); font-weight: 900; font-size: 0.85rem; text-decoration: none;
+    box-shadow: 0 6px 0 rgba(128,128,128,0.15), 0 10px 20px rgba(0,0,0,0.05);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
   }
-  .countdown-container::before { content: ""; position: absolute; width: 150px; height: 150px; background: rgba(37,99,235,0.1); filter: blur(40px); border-radius: 50%; top: -50px; right: -50px; pointer-events: none; }
-  .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; margin-top: 16px; }
-  .time-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 14px; padding: 12px 0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
-  .time-val { font-family: var(--font-num); font-size: 1.6rem; font-weight: 900; color: #2563eb; line-height: 1.1; }
-  .time-label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-  
-  .pulse-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; margin-right: 6px; animation: pulseRed 1.5s infinite; }
-  @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+  .btn-3d:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(128,128,128,0.15), 0 4px 10px rgba(0,0,0,0.05); }
+  .btn-3d.accent { border-color: rgba(var(--color-accent-rgb), 0.3); color: var(--color-accent); box-shadow: 0 6px 0 rgba(var(--color-accent-rgb), 0.2), 0 10px 20px rgba(var(--color-accent-rgb), 0.1); }
 
-  /* ===== Welcome Modal & Confetti ===== */
-  .welcome-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
-  .welcome-overlay.active { opacity: 1; pointer-events: auto; }
-  .welcome-card { background: var(--surface); width: 100%; max-width: 400px; border-radius: 24px; padding: 32px 24px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: translateY(40px) scale(0.95); opacity: 0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
-  .welcome-overlay.active .welcome-card { transform: translateY(0) scale(1); opacity: 1; }
-  
-  .welcome-icon-wrap { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(234,179,8,0.1)); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; border: 2px solid rgba(245,158,11,0.3); color: #d97706; animation: floatIcon 3s ease-in-out infinite; }
-  @keyframes floatIcon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  /* ===== The Rivalry Section ===== */
+  .rival-card {
+    background: linear-gradient(135deg, rgba(239,68,68,0.05), transparent); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 18px; padding: 16px; margin-top: 16px; display: flex; align-items: center; gap: 16px;
+  }
+  .rival-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(239,68,68,0.1); color: #ef4444; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rival-info { flex: 1; }
+  .rival-target { font-size: 0.7rem; font-weight: 900; color: #ef4444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+  .rival-name { font-size: 1rem; font-weight: 900; color: var(--text-primary); margin-bottom: 2px; }
+  .rival-desc { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
 
-  .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+  /* ===== Bounty Mission Card (Exams) ===== */
+  .bounty-card {
+    background: var(--surface); border: 1px solid var(--surface-border); border-radius: 18px; padding: 20px;
+    margin-top: 12px; position: relative; box-shadow: 0 8px 25px rgba(0,0,0,0.03);
+  }
+  .bounty-tag {
+    position: absolute; top: -12px; right: 20px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff;
+    font-size: 0.75rem; font-weight: 900; padding: 6px 12px; border-radius: 8px; border: 2px solid var(--surface);
+    box-shadow: 0 4px 10px rgba(245,158,11,0.3); display: flex; align-items: center; gap: 4px;
+  }
+  .bounty-timer { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 800; color: #ef4444; background: rgba(239,68,68,0.1); padding: 6px 12px; border-radius: 8px; display: inline-flex; margin-top: 12px; }
+  .bounty-pulse { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 
-  /* ===== Golden XP Hero Card & Level System (Kept from Previous) ===== */
-  .hero-points-card { background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 20px; padding: 24px; color: #713f12; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; box-shadow: 0 12px 35px -10px rgba(234, 179, 8, 0.35); }
-  .hero-points-card::after { content: ''; position: absolute; top: 0; left: -150%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%); transform: skewX(-25deg); animation: shine 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-  
-  .level-card { background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(37,99,235,0.01)); border: 1px solid rgba(37,99,235,0.15); border-radius: 18px; padding: 18px 20px; position: relative; overflow: hidden; box-shadow: inset 0 2px 15px rgba(37,99,235,0.02); }
-  .level-progress-bg { background: rgba(37,99,235,0.12); height: 8px; border-radius: 99px; margin-top: 14px; overflow: hidden; position: relative; }
-  .level-progress-fill { background: linear-gradient(90deg, #3b82f6, #60a5fa); height: 100%; width: 0%; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1); border-radius: 99px; }
+  /* ===== Trophy Showcase ===== */
+  .trophy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+  .trophy-item { background: rgba(128,128,128,0.04); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px 8px; text-align: center; }
+  .trophy-item.locked { opacity: 0.5; filter: grayscale(100%); }
+  .trophy-icon { margin-bottom: 8px; display: inline-flex; }
+  .trophy-name { font-size: 0.7rem; font-weight: 900; color: var(--text-primary); }
 
-  /* Utilities */
-  .subject-scroller { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; margin-top: 8px; }
-  .subject-scroller::-webkit-scrollbar { display: none; }
-  .subject-mini-card { min-width: 220px; flex-shrink: 0; }
-  .point-list-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--surface-border); }
-  .point-list-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .rank-number { width: 22px; font-size: 0.85rem; font-weight: 900; color: var(--text-muted); }
-  .trend-bar { flex: 1; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, var(--color-accent), var(--color-accent-2)); height: 0%; transition: height 1s cubic-bezier(0.22, 1, 0.36, 1); }
-  .progress-track { overflow: hidden; background: rgba(128,128,128,0.15); border-radius: 99px; height: 6px; }
-  .progress-fill { width: 0%; transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1); height: 100%; border-radius: 99px; background: var(--color-accent); }
+  /* Hidden Share Container (for capturing high quality PNG) */
+  #shareContainer { position: absolute; left: -9999px; top: 0; width: 800px; height: auto; background: #0f172a; color: #fff; padding: 40px; border-radius: 30px; font-family: sans-serif; box-sizing: border-box; }
 </style>
 </head>
 <body>
@@ -78,444 +97,273 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
-<!-- Welcome Modal Template -->
-<div id="welcomeOverlay" class="welcome-overlay">
-  <div class="welcome-card">
-    <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
-    <div style="position:relative; z-index:2;">
-      <div class="welcome-icon-wrap">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      </div>
-      <h2 style="font-size:1.6rem; font-weight:950; color:var(--text-primary); margin-bottom:8px; line-height:1.2;">স্বাগতম, <span id="welcomeName" style="color:#d97706;"></span>!</h2>
-      <p style="font-size:0.95rem; font-weight:600; color:var(--text-secondary); line-height:1.6; margin-bottom:24px;">পরীক্ষা প্রস্তুতির নতুন যাত্রায় তোমাকে অভিনন্দন। লেভেল আপ করতে এবং XP বাড়াতে আজই তোমার প্রথম পরীক্ষা দাও!</p>
-      <button id="welcomeStartBtn" class="btn-glass btn-primary" style="width:100%; padding:16px; font-size:1rem; border-radius:16px;">
-        শুরু করা যাক
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </button>
+<!-- Hidden Structure for PNG Export -->
+<div id="shareContainer">
+  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid rgba(255,255,255,0.1); padding-bottom:20px; margin-bottom:30px;">
+    <h1 style="font-size:32px; font-weight:900; margin:0; color:#38bdf8;">PHYSICS LOVER</h1>
+    <span style="font-size:20px; font-weight:700; color:#9ca3af; background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:12px;" id="shareDate"></span>
+  </div>
+  <div style="display:flex; align-items:center; gap:30px;">
+    <div style="width:120px; height:120px; border-radius:50%; background:#374151; display:flex; align-items:center; justify-content:center; font-size:48px; font-weight:900; border:4px solid #fbbf24;" id="shareAvatar"></div>
+    <div>
+      <h2 style="font-size:42px; font-weight:900; margin:0 0 10px 0;" id="shareName">Student Name</h2>
+      <p style="font-size:24px; color:#9ca3af; margin:0;" id="shareId">ID: PL-1234</p>
     </div>
+  </div>
+  <div style="margin-top:40px; text-align:center; background:rgba(255,255,255,0.05); padding:40px; border-radius:24px; border:1px solid rgba(255,255,255,0.1);">
+    <p style="font-size:24px; font-weight:800; color:#fbbf24; letter-spacing:4px; text-transform:uppercase; margin:0 0 20px 0;" id="shareLeague">GOLD LEAGUE</p>
+    <p style="font-size:100px; font-weight:900; font-family:monospace; margin:0; line-height:1; color:#fff;" id="shareXP">0</p>
+    <p style="font-size:24px; font-weight:700; color:#9ca3af; margin:10px 0 0 0;">TOTAL XP EARNED</p>
   </div>
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { initTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getStudentRank, getLeaderboardData } from "../js/utils/results-utils.js";
-import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
-import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
-import { generateMotivation } from "../js/utils/motivation-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 let student = getActiveStudent();
 
-if (!student) {
-  window.location.href = "../index.html";
-} else {
-  refreshActiveStudent(student.docId).then(fresh => {
-    if (fresh) student = fresh;
-    render();
-    checkWelcomeOnboarding();
-  });
+if (!student) { window.location.href = "../index.html"; } 
+else { refreshActiveStudent(student.docId).then(fresh => { if (fresh) student = fresh; render(); }); }
+
+function getLeagueInfo(xp) {
+  if (xp < 2000) return { name: "Rookie League", color: "#9ca3af", glow: "rgba(156,163,175,0.5)" };
+  if (xp < 5000) return { name: "Silver League", color: "#94a3b8", glow: "rgba(148,163,184,0.6)" };
+  if (xp < 10000) return { name: "Gold League", color: "#fbbf24", glow: "rgba(251,191,36,0.6)" };
+  return { name: "Diamond League", color: "#38bdf8", glow: "rgba(56,189,248,0.7)" };
 }
 
-/* ===== Lightweight Confetti Logic ===== */
-function startConfetti() {
-  const canvas = document.getElementById('confettiCanvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-  const pieces = [];
-  const colors = ['#f59e0b', '#3b82f6', '#ef4444', '#10b981', '#8b5cf6'];
-  for(let i=0; i<60; i++) {
-    pieces.push({
-      x: Math.random() * canvas.width, y: Math.random() * canvas.height - canvas.height,
-      w: Math.random() * 8 + 4, h: Math.random() * 8 + 4,
-      c: colors[Math.floor(Math.random() * colors.length)],
-      v: Math.random() * 3 + 2, r: Math.random() * 360, rv: Math.random() * 5 - 2.5
-    });
-  }
-  function animate() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    let allFallen = true;
-    pieces.forEach(p => {
-      p.y += p.v; p.r += p.rv;
-      if(p.y < canvas.height) allFallen = false;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r * Math.PI / 180);
-      ctx.fillStyle = p.c; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore();
-    });
-    if(!allFallen) requestAnimationFrame(animate);
-  }
-  animate();
-}
-
-function checkWelcomeOnboarding() {
-  const hasSeen = localStorage.getItem(`welcomed_${student.studentId}`);
-  if (!hasSeen) {
-    const overlay = document.getElementById('welcomeOverlay');
-    document.getElementById('welcomeName').textContent = student.name ? student.name.split(' ')[0] : 'বন্ধু';
-    overlay.classList.add('active');
-    setTimeout(startConfetti, 300);
-    
-    document.getElementById('welcomeStartBtn').addEventListener('click', () => {
-      overlay.classList.remove('active');
-      localStorage.setItem(`welcomed_${student.studentId}`, 'true');
-      setTimeout(() => overlay.style.display = 'none', 500);
-    });
-  }
-}
-
-function animateCountUp(el, target, duration = 800) {
-  if (!el || typeof target !== "number" || isNaN(target)) return;
-  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduce) { el.textContent = target; return; }
-  const start = performance.now();
-  function frame(now) {
-    const t = Math.min(1, (now - start) / duration);
-    const eased = 1 - Math.pow(1 - t, 3);
-    el.textContent = Math.round(target * eased);
-    if (t < 1) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-}
-
-function getLevelInfo(xp) {
+function getLevelThresholds(level) {
   const levels = [0, 1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000];
-  let currentLevel = 1;
-  for(let i = 0; i < levels.length; i++) { if(xp >= levels[i]) currentLevel = i + 1; }
-  const currentThreshold = levels[currentLevel - 1];
-  const nextThreshold = levels[currentLevel] || levels[levels.length - 1];
-  const progressXP = xp - currentThreshold;
-  const targetXP = nextThreshold - currentThreshold;
-  const percentage = targetXP === 0 ? 100 : Math.min(100, Math.max(0, (progressXP / targetXP) * 100));
-  
-  return { level: currentLevel, nextLevel: currentLevel + 1, xpNeeded: nextThreshold - xp, percentage: Math.round(percentage), isMax: currentLevel === levels.length };
+  const currentThreshold = levels[level - 1] || 0;
+  const nextThreshold = levels[level] || levels[levels.length - 1];
+  return { currentThreshold, nextThreshold };
 }
 
 async function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
     
-    <div class="mt-4 flex gap-2">
-      <a href="../student/analytics.html" class="btn-glass">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
-        বিশ্লেষণ
+    <!-- Gamer Profile Area -->
+    <div id="gamerProfileSection"></div>
+    
+    <!-- Action Hub (3D Buttons) -->
+    <div class="action-hub">
+      <a href="../student/analytics.html" class="btn-3d">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
+        <span>তোমার স্ট্যাটস</span>
       </a>
-      <a href="../student/comparison.html" class="btn-glass">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-        তুলনা
+      <a href="../student/comparison.html" class="btn-3d accent">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
+        <span>ফেস-অফ (লড়াই)</span>
       </a>
     </div>
 
-    <!-- Live Countdown Timer -->
-    <div id="countdownSection" class="mt-5" style="display:none;"></div>
-
-    <!-- Upcoming Exams -->
-    <div id="upcomingSection" class="mt-5" style="display: none;"></div>
+    <!-- Rivalry Section -->
+    <div id="rivalrySection"></div>
     
-    <!-- Hero Points & Level -->
-    <div id="pointsHeroSection" class="mt-5"></div>
+    <!-- Bounty Missions (Exams) -->
+    <div id="bountySection" class="mt-5"></div>
     
-    <!-- Motivation -->
-    <div id="motivationSection" class="mt-4"></div>
-    
-    <!-- Leaderboard Top 3 -->
-    <div id="pointListSection" class="mt-5"></div>
-    
-    <!-- Stats -->
-    <div id="statsSection" class="mt-5"></div>
-    
-    <!-- Subjects -->
-    <div id="subjectSection" class="mt-5"></div>
-    
-    <!-- Weak Topics -->
-    <div id="weakTopicSection" class="mt-5 mb-5"></div>
+    <!-- Trophy Cabinet -->
+    <div id="trophySection" class="mt-5 mb-5"></div>
   `;
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
-  loadUpcoming();
-  loadMotivation();
-  loadPerformanceAndLeaderboard();
+  loadGamerProfile();
+  loadBountyMissions();
 }
 
-let unsubscribeUpcoming = null;
-let countdownInterval = null;
+async function exportShareImage() {
+  const btn = document.getElementById("shareBtn");
+  const ogText = btn.innerHTML;
+  btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;"></span> প্রস্তুত হচ্ছে...`;
+  btn.disabled = true;
 
-async function loadUpcoming() {
-  const el = document.getElementById("upcomingSection");
   try {
-    const [subjects, chapters, resultMap] = await Promise.all([
-      getSubjects(), getChapters(), getStudentResultStatusMap(student.studentId)
+    const container = document.getElementById("shareContainer");
+    const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#0f172a", logging: false });
+    const image = canvas.toDataURL("image/png", 1.0);
+    const link = document.createElement("a");
+    link.download = `PhysicsLover_${student.studentId}_Stats.png`;
+    link.href = image;
+    link.click();
+    showToast("ইমেজ ডাউনলোড শুরু হয়েছে!", "success");
+  } catch(e) {
+    showToast("শেয়ার কার্ড তৈরি করতে সমস্যা হয়েছে।", "error");
+  } finally {
+    btn.innerHTML = ogText; btn.disabled = false;
+  }
+}
+
+async function loadGamerProfile() {
+  const profileEl = document.getElementById("gamerProfileSection");
+  const rivalEl = document.getElementById("rivalrySection");
+  const trophyEl = document.getElementById("trophySection");
+  profileEl.innerHTML = `<div class="spinner" style="margin:40px auto;"></div>`;
+
+  try {
+    const [rankData, allStudents, results] = await Promise.all([
+      getStudentRank(student.studentId), getActiveStudents(), getApprovedResults(student.studentId)
     ]);
-    const subjectMap = buildNameMap(subjects);
-    const chapterMap = buildNameMap(chapters);
-
-    if (unsubscribeUpcoming) unsubscribeUpcoming();
-    unsubscribeUpcoming = subscribeToUpcomingExams(
-      (exams) => {
-         renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap);
-         setupCountdownTimer(exams);
-      },
-      (err) => { console.error(err); el.style.display = "none"; }
-    );
-  } catch (err) { console.error(err); el.style.display = "none"; }
-}
-
-function setupCountdownTimer(exams) {
-  const countdownEl = document.getElementById("countdownSection");
-  const now = new Date().getTime();
-  
-  // Find the next upcoming exam for this student
-  let nextExam = null;
-  const eligibleExams = exams.filter(e => {
-    const target = e.targetBatch || "all";
-    if (target !== "all" && target !== student.className) return false;
-    const allowed = e.allowedStudents || [];
-    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
-    if (!e.examDate || !e.examDate.toDate) return false;
-    return e.examDate.toDate().getTime() > now;
-  });
-
-  if(eligibleExams.length > 0) {
-     nextExam = eligibleExams.sort((a, b) => a.examDate.toDate().getTime() - b.examDate.toDate().getTime())[0];
-  }
-
-  if (!nextExam) {
-     countdownEl.style.display = "none";
-     if(countdownInterval) clearInterval(countdownInterval);
-     return;
-  }
-
-  countdownEl.style.display = "block";
-  const targetTime = nextExam.examDate.toDate().getTime();
-
-  countdownEl.innerHTML = `
-    <div class="countdown-container">
-      <div style="display:flex; align-items:center; gap:8px; width:100%; margin-bottom:8px;">
-        <span class="pulse-dot"></span>
-        <span style="font-weight:900; font-size:0.95rem; color:#1e3a8a;">পরবর্তী লাইভ পরীক্ষা</span>
-      </div>
-      <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${nextExam.name}</p>
-      
-      <div class="time-grid">
-        <div class="time-box"><div class="time-val" id="cdDays">00</div><div class="time-label">দিন</div></div>
-        <div class="time-box"><div class="time-val" id="cdHours">00</div><div class="time-label">ঘণ্টা</div></div>
-        <div class="time-box"><div class="time-val" id="cdMins">00</div><div class="time-label">মিনিট</div></div>
-        <div class="time-box"><div class="time-val" id="cdSecs" style="color:#ef4444;">00</div><div class="time-label">সেকেন্ড</div></div>
-      </div>
-    </div>
-  `;
-
-  if(countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    const currentTime = new Date().getTime();
-    const distance = targetTime - currentTime;
-
-    if (distance < 0) {
-      clearInterval(countdownInterval);
-      countdownEl.style.display = "none";
-      return;
-    }
-
-    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((distance % (1000 * 60)) / 1000);
-
-    const pad = (n) => n < 10 ? '0' + n : n;
-    const elDays = document.getElementById("cdDays");
-    if(elDays) {
-       elDays.innerText = pad(d);
-       document.getElementById("cdHours").innerText = pad(h);
-       document.getElementById("cdMins").innerText = pad(m);
-       document.getElementById("cdSecs").innerText = pad(s);
-    }
-  }, 1000);
-}
-
-function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
-  const now = new Date().getTime();
-
-  const filteredExams = exams.filter(exam => {
-    const pubTime = exam.publishDate?.toDate ? exam.publishDate.toDate().getTime() : 0;
-    if (pubTime > now) return false;
-    const target = exam.targetBatch || "all";
-    if (target !== "all" && target !== student.className) return false;
-    const allowed = exam.allowedStudents || [];
-    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
-    return true;
-  });
-
-  if (filteredExams.length === 0) {
-    el.style.display = "none"; el.innerHTML = ""; return;
-  }
-
-  el.style.display = "block"; 
-  el.innerHTML = `<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <p class="eyebrow" style="margin:0;">অ্যাসাইনড পরীক্ষা</p>
-                  </div>` 
-  + filteredExams.map(exam => {
-    const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
-    const own = resultMap[exam.id];
-    let actionHtml = "";
     
-    if (own?.status === "approved") {
-      actionHtml = `<a href="../student/result.html?resultId=${own.resultId}" class="btn-glass mt-3" style="width:100%; border-color:var(--color-success); color:var(--color-success);">ফলাফল দেখুন</a>`;
-    } else if (own?.status === "pending") {
-      actionHtml = `<p class="text-xs text-muted mt-3 text-center" style="font-weight:700;">জমা দেওয়া হয়েছে — অনুমোদনের অপেক্ষায়।</p>`;
-    } else if (exam.status === "published") {
-      actionHtml = `<a href="../student/exam.html?examId=${exam.id}" class="btn-glass mt-3" style="width:100%; background:linear-gradient(135deg, var(--color-accent), #f59e0b); color:#fff; border:none; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb),0.3); font-weight:900; letter-spacing:0.5px;">পরীক্ষা শুরু করুন</a>`;
-    }
+    const xp = rankData?.totalPoints || 0;
+    const level = rankData?.level || 1;
+    const league = getLeagueInfo(xp);
+    const th = getLevelThresholds(level);
     
-    const isSpecial = (exam.allowedStudents && exam.allowedStudents.length > 0);
-    const marks = Number(exam.totalMarks) || 0;
-    const qCount = exam.questionIds ? exam.questionIds.length : (marks > 0 ? 1 : 0);
-    const maxXP = Math.round((marks * 10) + 50 + (qCount * 5) + 100);
+    // Reverse engineer baseXP from DB logic to show correct progress (BaseXP = TotalXP - BonusXP)
+    const bonusXP = (level - 1) * 500;
+    const baseXP = Math.max(0, xp - bonusXP);
+    
+    const progressXP = baseXP - th.currentThreshold;
+    const targetXP = th.nextThreshold - th.currentThreshold;
+    const percentage = targetXP === 0 ? 100 : Math.min(100, Math.max(0, (progressXP / targetXP) * 100));
+    const xpNeededForNext = th.nextThreshold - baseXP;
 
-    return `
-      <div class="glass-float-card mt-2" ${isSpecial ? 'style="border-color:var(--color-accent); background:rgba(var(--color-accent-rgb), 0.03);"' : ''}>
-        <div class="flex justify-between items-start mb-3">
-          <h3 style="font-size:1.15rem; font-weight:900; line-height:1.4;">${exam.name}</h3>
-          <span style="background:rgba(37, 99, 235, 0.1); color:#2563eb; font-weight:800; font-size:0.7rem; padding:4px 10px; border-radius:8px; white-space:nowrap; margin-left:12px;">${isSpecial ? "স্পেশাল এক্সাম" : (exam.status === "published" ? "প্রকাশিত" : "আসন্ন")}</span>
+    const initial = student.name ? student.name.charAt(0).toUpperCase() : "S";
+    
+    // Prepare Share Container Data
+    document.getElementById("shareDate").textContent = new Date().toLocaleDateString('en-GB');
+    document.getElementById("shareAvatar").textContent = initial;
+    document.getElementById("shareAvatar").style.borderColor = league.color;
+    document.getElementById("shareName").textContent = student.name || "Student";
+    document.getElementById("shareId").textContent = "ID: " + student.studentId;
+    document.getElementById("shareLeague").textContent = league.name.toUpperCase();
+    document.getElementById("shareLeague").style.color = league.color;
+    document.getElementById("shareXP").textContent = xp;
+
+    profileEl.innerHTML = `
+      <div class="gamer-profile-card" style="--league-color: ${league.color}; --league-glow: ${league.glow};">
+        <div class="gp-header">
+          <div class="gp-avatar-wrap">
+            <div class="gp-avatar" style="color:${league.color};">${initial}</div>
+            <div class="gp-level-badge">LVL ${level}</div>
+          </div>
+          <button id="shareBtn" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:12px; padding:8px 12px; font-weight:800; font-size:0.75rem; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            শেয়ার
+          </button>
         </div>
-        <div class="grid-2 gap-2">
-          <div style="background:rgba(128,128,128,0.05); padding:10px; border-radius:10px;">
-             <p class="text-xs text-muted">তারিখ ও সময়</p>
-             <p class="text-sm font-bold" style="margin-top:2px;">${dateStr || "—"}</p>
-          </div>
-          <div style="background:rgba(128,128,128,0.05); padding:10px; border-radius:10px;">
-             <p class="text-xs text-muted">সময়কাল</p>
-             <p class="text-sm font-bold" style="margin-top:2px;">${exam.durationMinutes ? exam.durationMinutes + " মিনিট" : "—"}</p>
-          </div>
-          <div style="background:linear-gradient(135deg, rgba(234,179,8,0.08), rgba(245,158,11,0.03)); padding:12px 16px; border-radius:10px; grid-column: span 2; display:flex; justify-content:space-between; align-items:center; border: 1px dashed rgba(234, 179, 8, 0.3);">
-             <div style="display:flex; align-items:center; gap:8px; color:#b45309;">
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/></svg>
-               <span class="text-sm font-bold">এই পরীক্ষায় থাকছে সর্বোচ্চ</span>
-             </div>
-             <p style="color:#d97706; font-family:var(--font-num); font-size:1.3rem; font-weight:900;">${maxXP} XP</p>
-          </div>
+        <div class="gp-identity">
+          <div class="gp-name">${student.name || "Student"}</div>
+          <div class="gp-id">${student.studentId} • <span style="color:${league.color}; font-weight:900;">${league.name}</span></div>
         </div>
-        ${actionHtml}
+        <div class="gp-xp-container">
+          <div class="gp-xp-value">${xp}</div>
+          <div class="gp-xp-label">Total XP</div>
+        </div>
+        <div class="shimmer-progress-bg"><div class="shimmer-progress-fill" style="width:${percentage}%;"></div></div>
+        <div class="gp-bonus-text">
+          ${targetXP === 0 ? 'ম্যাক্স লেভেল আনলকড!' : `Level ${level + 1}-এ গেলেই <span class="gp-bonus-highlight">+৫০০ XP রয়্যাল বোনাস!</span> (আর ${xpNeededForNext} Base XP দরকার)`}
+        </div>
       </div>
     `;
-  }).join("");
-}
+    
+    // Bind Share Button
+    setTimeout(() => { document.getElementById("shareBtn").addEventListener("click", exportShareImage); }, 100);
 
-// ... Motivation & Stats rendering remains exactly the same logic ...
-async function loadMotivation() {
-  const el = document.getElementById("motivationSection");
-  try {
-    const [rank, results, subjects] = await Promise.all([getStudentRank(student.studentId), getApprovedResults(student.studentId), getSubjects()]);
-    if (results.length === 0) return; 
-    const overall = computeOverallStats(results);
-    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
-    let weakest = null, strongest = null;
-    (subjectStats || []).forEach(s => {
-      if (!weakest || s.accuracy < weakest.accuracy) weakest = s;
-      if (!strongest || s.accuracy > strongest.accuracy) strongest = s;
-    });
-    const advice = generateMotivation({ overallPercentage: overall?.avgPercentage, rank: rank?.rank, totalStudents: rank?.totalStudents, examsTaken: overall?.examsTaken ?? results.length, weakestSubjectName: weakest?.name, weakestSubjectAccuracy: weakest?.accuracy, strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null, strongestSubjectAccuracy: strongest?.accuracy });
-    el.innerHTML = `<div class="glass-float-card mt-2"><p class="text-sm" style="font-weight:900; color: var(--text-primary); margin-bottom:8px; display:flex; align-items:center; gap:6px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>AI বিশ্লেষণ ও পরামর্শ</p><p class="text-sm" style="line-height:1.6; color: var(--text-secondary); font-weight:600;">${advice}</p></div>`;
-  } catch (err) { console.error(err); }
-}
-
-async function loadPerformanceAndLeaderboard() {
-  const ptsEl = document.getElementById("pointsHeroSection");
-  const pointListEl = document.getElementById("pointListSection");
-  const statsEl = document.getElementById("statsSection");
-  const subjEl = document.getElementById("subjectSection");
-  const weakEl = document.getElementById("weakTopicSection");
-  
-  ptsEl.innerHTML = `<div class="glass-float-card skeleton" style="height:250px;"></div>`;
-  statsEl.innerHTML = `<div class="glass-float-card skeleton mt-2" style="height:120px;"></div>`;
-
-  try {
-    const [results, rank, allStudents] = await Promise.all([getApprovedResults(student.studentId), getStudentRank(student.studentId), getActiveStudents()]);
+    // Load Rivalry
     let leaderboard = await getLeaderboardData(allStudents);
-    leaderboard = leaderboard.sort((a,b) => (Number(b.totalPoints) || 0) - (Number(a.totalPoints) || 0));
-    const overall = computeOverallStats(results);
-    const totalPoints = rank?.totalPoints || 0;
-    const rankText = rank ? `${rank.rank} / ${rank.totalStudents}` : "—";
-    const totalQuestions = (overall?.totalCorrect || 0) + (overall?.totalWrong || 0) + (overall?.totalUnanswered || 0);
-
-    const levelInfo = getLevelInfo(totalPoints);
-
-    if (!overall) {
-      ptsEl.innerHTML = ""; pointListEl.innerHTML = "";
-      statsEl.innerHTML = `<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><p class="eyebrow" style="margin:0;">পরিসংখ্যান</p></div>`;
-      const box = document.createElement("div"); box.className = "mt-2"; renderState(box, "empty", "এখনো কোনো অনুমোদিত ফলাফল নেই।"); statsEl.appendChild(box); return;
-    }
-
-    const topScorer = leaderboard.length > 0 ? leaderboard[0] : null;
-    let topScorerText = "";
-    if (topScorer) {
-      const isMeTop = topScorer.studentId === student.studentId;
-      topScorerText = `<div class="top-scorer-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>শীর্ষস্থান: ${isMeTop ? "তুমি" : topScorer.name}</div>`;
-    }
-
-    const cleanTrophySvg = `<svg width="65" height="65" viewBox="0 0 24 24" fill="none" stroke="#713f12" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>`;
-
-    ptsEl.innerHTML = `
-      <div class="hero-points-card">
-        <div>
-          <p style="font-size: 0.85rem; font-weight: 800; opacity: 0.85; margin-bottom: 2px;">সর্বমোট অর্জিত পয়েন্ট</p>
-          <h2 style="font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin: 0; letter-spacing: -1px; color:#92400e;"><span class="num" id="heroTotalPoints">0</span> <span style="font-size:1.2rem;">XP</span></h2>
-          <p style="font-size: 0.8rem; font-weight: 800; opacity: 0.9; margin-top: 6px;">বর্তমান র‍্যাঙ্ক: <span style="font-family:var(--font-num);">${rankText}</span></p>
-          ${topScorerText}
+    const myIndex = leaderboard.findIndex(s => s.studentId === student.studentId);
+    if (myIndex > 0) {
+      const rival = leaderboard[myIndex - 1];
+      const gap = rival.totalPoints - xp;
+      rivalEl.innerHTML = `
+        <div class="rival-card">
+          <div class="rival-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+          <div class="rival-info">
+            <div class="rival-target">দ্য রাইভাল ടార్గెట్</div>
+            <div class="rival-name">${rival.name || rival.studentId}</div>
+            <div class="rival-desc">লিডারবোর্ডে তাকে টপকাতে তোমার আর মাত্র <strong style="color:var(--text-primary);">${gap + 1} XP</strong> দরকার!</div>
+          </div>
         </div>
-        <div class="hero-icon-container">${cleanTrophySvg}</div>
-      </div>
-      <div class="level-card mt-3">
-         <div class="flex justify-between items-end">
-            <div>
-               <div style="display:flex; align-items:center; gap:8px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span style="font-weight:900; font-size:1.15rem; color:#1e3a8a; letter-spacing:0.5px;">Level ${levelInfo.level}</span></div>
-               <p style="font-size:0.75rem; color:#3b82f6; margin-top:6px; font-weight:800;">${levelInfo.isMax ? 'আপনি সর্বোচ্চ লেভেল অর্জন করেছেন!' : `Level ${levelInfo.nextLevel}-এ যেতে আর ${levelInfo.xpNeeded} XP প্রয়োজন`}</p>
-            </div>
-            <div style="font-family:var(--font-num); font-weight:900; font-size:1.3rem; color:#2563eb;">${levelInfo.percentage}%</div>
-         </div>
-         <div class="level-progress-bg"><div class="level-progress-fill level-anim" data-w="${levelInfo.percentage}"></div></div>
-      </div>
-    `;
-
-    const byClass = {}; leaderboard.forEach(r => { const c = r.className || "অনির্ধারিত ক্লাস"; if (!byClass[c]) byClass[c] = []; byClass[c].push(r); });
-    let classListHtml = `<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><p class="eyebrow" style="margin:0;">ক্লাস র‍্যাঙ্কিং (Top 3)</p></div>`;
-    for (const [cls, classStudents] of Object.entries(byClass)) {
-      const top3 = classStudents.slice(0, 3);
-      classListHtml += `<div class="glass-float-card mb-3"><p style="font-size:0.95rem; font-weight:900; border-bottom:1px solid rgba(128,128,128,0.1); padding-bottom:10px; margin-bottom:6px; color:var(--color-accent);">${cls}</p>${top3.map((s, idx) => `<div class="point-list-row"><div class="flex items-center gap-3"><span class="rank-number">${idx + 1}.</span><span style="font-size:0.95rem; font-weight:${s.studentId === student.studentId ? '900; color:var(--color-accent)' : '700; color:var(--text-secondary)'};">${s.name}${s.studentId === student.studentId ? ' (তুমি)' : ''}</span></div><span class="num" style="font-size:0.9rem; font-weight:900; color:var(--text-primary); background:rgba(128,128,128,0.08); padding:4px 10px; border-radius:8px;">${s.totalPoints} XP</span></div>`).join("")}${classStudents.length > 3 ? `<div style="text-align:center; margin-top:16px;"><a href="../student/leaderboard.html" class="btn-glass" style="font-size:0.8rem; padding:8px 16px; border-radius:8px; display:inline-block; width:auto;">সম্পূর্ণ তালিকা দেখুন</a></div>` : ''}</div>`;
-    }
-    pointListEl.innerHTML = classListHtml;
-
-    statsEl.innerHTML = `<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><p class="eyebrow" style="margin:0;">বিস্তারিত পরিসংখ্যান</p></div><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div class="glass-float-card" style="text-align:center; padding:16px;"><p class="text-xs text-muted font-bold">মোট পরীক্ষা</p><p class="num" style="font-size:1.6rem;font-weight:900; margin-top:6px;" id="statExams">0</p></div><div class="glass-float-card" style="text-align:center; padding:16px;"><p class="text-xs text-muted font-bold">মোট প্রশ্ন ফেস করা</p><p class="num" style="font-size:1.6rem;font-weight:900; margin-top:6px;">${totalQuestions}</p></div><div class="glass-float-card" style="text-align:center; padding:16px;"><p class="text-xs text-muted font-bold">সঠিক উত্তর</p><p class="num" style="font-size:1.6rem;font-weight:900; color:var(--color-success); margin-top:6px;">${overall.totalCorrect}</p></div><div class="glass-float-card" style="text-align:center; padding:16px;"><p class="text-xs text-muted font-bold">ভুল উত্তর</p><p class="num" style="font-size:1.6rem;font-weight:900; color:var(--color-danger); margin-top:6px;">${overall.totalWrong}</p></div><div class="glass-float-card" style="text-align:center; padding:16px;"><p class="text-xs text-muted font-bold">গড় শতাংশ</p><p style="font-size:1.6rem;font-weight:900; margin-top:6px;"><span class="num" id="statAvgPct">0</span>%</p></div><div class="glass-float-card" style="text-align:center; padding:16px;"><p class="text-xs text-muted font-bold">গড় সঠিকতা</p><p style="font-size:1.6rem;font-weight:900; margin-top:6px;"><span class="num" id="statAvgAcc">0</span>%</p></div></div>${overall.trend ? `<div class="glass-float-card mt-3"><p class="text-xs text-muted mb-3" style="font-weight:800;">পারফরম্যান্স গ্রাফ</p><div class="flex items-end gap-2" style="height:70px;">${overall.trend.map(t => `<div class="trend-bar" data-h="${Math.max(6, (t.value || 0))}" title="${t.value ?? '—'}%"></div>`).join("")}</div></div>` : ""}`;
-
-    const subjects = await getSubjects();
-    const subjectMap = buildNameMap(subjects);
-    const subjectStats = computeSubjectStats(results, subjectMap);
-    
-    if (subjectStats.length === 0) { subjEl.innerHTML = `<p class="eyebrow">বিষয়ভিত্তিক পারফরম্যান্স</p><p class="text-xs text-muted mt-2">তথ্য নেই।</p>`; } 
-    else {
-      subjEl.innerHTML = `<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg><p class="eyebrow" style="margin:0;">বিষয়ভিত্তিক পারফরম্যান্স</p></div><div class="subject-scroller">${subjectStats.map(s => `<div class="glass-float-card subject-mini-card"><div class="flex justify-between items-center mb-3"><p style="font-weight:800; font-size:0.95rem;">${s.name}</p><p style="font-weight:900; font-family:var(--font-num); color:var(--color-accent); background:rgba(var(--color-accent-rgb),0.1); padding:2px 8px; border-radius:6px;">${s.accuracy ?? "—"}%</p></div><div class="progress-track"><div class="progress-fill subj-progress" data-w="${s.accuracy ?? 0}"></div></div><div class="grid-2 mt-4" style="gap:8px;"><div style="background:rgba(128,128,128,0.06); padding:8px; border-radius:10px; text-align:center;"><span style="font-size:0.65rem; color:var(--text-muted); font-weight:700; display:block;">সঠিক</span><span class="num" style="font-size:1rem; font-weight:900; color:var(--color-success);">${s.correct}</span></div><div style="background:rgba(128,128,128,0.06); padding:8px; border-radius:10px; text-align:center;"><span style="font-size:0.65rem; color:var(--text-muted); font-weight:700; display:block;">ভুল</span><span class="num" style="font-size:1rem; font-weight:900; color:var(--color-danger);">${s.wrong}</span></div></div></div>`).join("")}</div>`;
+      `;
     }
 
-    const { getTopics } = await import("../js/utils/syllabus-utils.js");
-    const topics = await getTopics();
-    const topicMap = buildNameMap(topics);
-    const topicStats = computeTopicStats(results, topicMap);
-    const weakTopics = topicStats.filter(t => t.isWeak);
-
-    weakEl.innerHTML = `<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><p class="eyebrow" style="margin:0;">দুর্বল টপিক নির্দেশক</p></div>` + (weakTopics.length === 0 ? `<p class="text-sm text-muted mt-2 font-bold">${topicStats.length === 0 ? "পর্যাপ্ত তথ্য নেই।" : "কোনো ধারাবাহিক দুর্বল টপিক পাওয়া যায়নি।"}</p>` : weakTopics.map(t => `<div class="glass-float-card weak-anim mt-3" style="border: 1px solid rgba(239, 68, 68, 0.3); background:linear-gradient(135deg, rgba(239,68,68,0.05), transparent);"><div class="flex items-center gap-4"><span class="icon-btn" style="color:var(--color-danger); background:rgba(239,68,68,0.15); border:none; border-radius:12px; padding:10px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;"><path d="M12 3L2.8 20h18.4L12 3z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg></span><div><p style="font-weight:900; font-size:1rem; color:var(--text-primary);">${t.name ?? "—"}</p><p class="text-xs mt-1" style="color:var(--text-muted); font-weight:700;">সঠিকতার হার মাত্র <span class="num" style="color:var(--color-danger); font-weight:900; font-size:0.9rem;">${t.accuracy}%</span></p></div></div></div>`).join(""));
-
-    requestAnimationFrame(() => {
-      animateCountUp(document.getElementById("heroTotalPoints"), totalPoints, 1200);
-      animateCountUp(document.getElementById("statExams"), Number(overall.examsTaken) || 0, 700);
-      if (overall.avgPercentage != null) animateCountUp(document.getElementById("statAvgPct"), Number(overall.avgPercentage) || 0, 800);
-      if (overall.avgAccuracy != null) animateCountUp(document.getElementById("statAvgAcc"), Number(overall.avgAccuracy) || 0, 800);
-      
-      document.querySelectorAll(".trend-bar").forEach(bar => { const h = bar.dataset.h || 6; requestAnimationFrame(() => { bar.style.height = `${h}%`; }); });
-      document.querySelectorAll(".subj-progress").forEach(bar => { const w = bar.dataset.w || 0; requestAnimationFrame(() => { bar.style.width = `${w}%`; }); });
-      document.querySelectorAll(".level-anim").forEach(bar => { const w = bar.dataset.w || 0; requestAnimationFrame(() => { bar.style.width = `${w}%`; }); });
+    // Load Trophies
+    let perfects = 0, hasSharpshooter = false;
+    results.forEach(r => { 
+       if(Number(r.percentage) === 100) perfects++; 
+       const attempted = (Number(r.correctCount)||0) + (Number(r.wrongCount)||0);
+       const acc = attempted > 0 ? ((Number(r.correctCount)||0) / attempted) * 100 : 0;
+       if(acc >= 90 && attempted >= 5) hasSharpshooter = true;
     });
 
-  } catch (err) { console.error(err); renderState(statsEl, "error", "পারফরম্যান্স তথ্য লোড করা যায়নি।"); }
+    trophyEl.innerHTML = `
+      <div style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+        ট্রফি ক্যাবিনেট
+      </div>
+      <div class="trophy-grid">
+        <div class="trophy-item ${perfects > 0 ? '' : 'locked'}">
+          <div class="trophy-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div>
+          <div class="trophy-name">পারফেক্ট স্কোর</div>
+        </div>
+        <div class="trophy-item ${results.length >= 3 ? '' : 'locked'}">
+          <div class="trophy-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-5 3.5-5 9.5a5 5 0 0 0 10 0C17 5.5 12 2 12 2z"/></svg></div>
+          <div class="trophy-name">কন্সিস্টেন্সি (৩টি এক্সাম)</div>
+        </div>
+        <div class="trophy-item ${hasSharpshooter ? '' : 'locked'}">
+          <div class="trophy-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg></div>
+          <div class="trophy-name">শার্পশুটার (৯০%+)</div>
+        </div>
+      </div>
+    `;
+  } catch (err) { console.error(err); profileEl.innerHTML = `<p style="color:#ef4444; text-align:center;">ডেটা লোড করা যায়নি।</p>`; }
+}
+
+async function loadBountyMissions() {
+  const el = document.getElementById("bountySection");
+  try {
+    subscribeToUpcomingExams((exams) => {
+      const now = new Date().getTime();
+      const filtered = exams.filter(e => {
+        const pubTime = e.publishDate?.toDate ? e.publishDate.toDate().getTime() : 0;
+        if (pubTime > now) return false;
+        const target = e.targetBatch || "all";
+        if (target !== "all" && target !== student.className) return false;
+        const allowed = e.allowedStudents || [];
+        if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) { el.innerHTML = ""; return; }
+
+      el.innerHTML = `
+        <div style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          লাইভ মিশন
+        </div>
+      ` + filtered.map(exam => {
+        const isSpecial = (exam.allowedStudents && exam.allowedStudents.length > 0);
+        const marks = Number(exam.totalMarks) || 0;
+        const qCount = exam.questionIds ? exam.questionIds.length : (marks > 0 ? 1 : 0);
+        const maxXP = Math.round((marks * 10) + 50 + (qCount * 5) + 100);
+        
+        let timerHtml = "";
+        if (exam.examDate?.toDate && exam.examDate.toDate().getTime() > now) {
+           const d = exam.examDate.toDate();
+           timerHtml = `<div class="bounty-timer"><div class="bounty-pulse"></div> শুরু: ${d.toLocaleDateString("bn-BD")} - ${exam.informationalTime}</div>`;
+        }
+
+        return `
+          <div class="bounty-card" ${isSpecial ? 'style="border-color:#f59e0b; background:rgba(245, 158, 11, 0.03);"' : ''}>
+            <div class="bounty-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Bounty: ${maxXP} XP
+            </div>
+            <h3 style="font-size:1.15rem; font-weight:900; line-height:1.4; margin-bottom:8px; padding-right:80px;">${exam.name}</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); font-weight:600; margin-bottom:12px;">সময়কাল: ${exam.durationMinutes ? exam.durationMinutes + " মিনিট" : "—"}</p>
+            ${timerHtml}
+            ${exam.status === "published" ? `<a href="../student/exam.html?examId=${exam.id}" style="display:block; text-align:center; background:#10b981; color:#fff; font-weight:900; padding:12px; border-radius:12px; text-decoration:none; margin-top:16px; box-shadow:0 6px 20px rgba(16,185,129,0.3);">মিশন শুরু করুন</a>` : ''}
+          </div>
+        `;
+      }).join("");
+    });
+  } catch (err) { console.error(err); }
 }
 </script>
 </body>
