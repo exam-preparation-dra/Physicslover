@@ -145,7 +145,6 @@ async function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
     
-    <!-- 1. Top Action Buttons (Transparent Glass) -->
     <div class="mt-4 flex gap-2">
       <a href="../student/analytics.html" class="btn-glass">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
@@ -157,25 +156,25 @@ async function render() {
       </a>
     </div>
 
-    <!-- 2. Upcoming Exams (Will be completely hidden if none exist) -->
+    <!-- Upcoming Exams -->
     <div id="upcomingSection" class="mt-5" style="display: none;"></div>
     
-    <!-- 3. Points Hero Section (Cream Yellow) -->
+    <!-- Points Hero -->
     <div id="pointsHeroSection" class="mt-5"></div>
     
-    <!-- 4. Motivation Analysis (Floating Glass without border) -->
+    <!-- Motivation Analysis -->
     <div id="motivationSection" class="mt-4"></div>
     
-    <!-- 5. Top 3 Point Table -->
+    <!-- Point Table -->
     <div id="pointListSection" class="mt-5"></div>
     
-    <!-- 6. Detailed Stats -->
+    <!-- Detailed Stats -->
     <div id="statsSection" class="mt-5"></div>
     
-    <!-- 7. Advanced Subject Slider -->
+    <!-- Subject Slider -->
     <div id="subjectSection" class="mt-5"></div>
     
-    <!-- 8. Weak Topics -->
+    <!-- Weak Topics -->
     <div id="weakTopicSection" class="mt-5 mb-5"></div>
   `;
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
@@ -206,15 +205,34 @@ async function loadUpcoming() {
   }
 }
 
+// ===== নতুন ফিল্টারিং লজিক (Publish Date, Target Batch, Specific Students) =====
 function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
-  if (exams.length === 0) {
-    el.style.display = "none"; // Hide completely if no exams
+  const now = new Date().getTime();
+
+  const filteredExams = exams.filter(exam => {
+    // ১. Publish Date চেক (ভবিষ্যতের পরীক্ষা হাইড করবে)
+    const pubTime = exam.publishDate?.toDate ? exam.publishDate.toDate().getTime() : 0;
+    if (pubTime > now) return false;
+
+    // ২. Batch চেক (all না হলে নিজের ব্যাচের সাথে মেলাবে)
+    const target = exam.targetBatch || "all";
+    if (target !== "all" && target !== student.className) return false;
+
+    // ৩. Specific Student চেক (যদি নির্দিষ্ট কাউকে স্পেশাল পরীক্ষা দেওয়া হয়)
+    const allowed = exam.allowedStudents || [];
+    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+
+    return true;
+  });
+
+  if (filteredExams.length === 0) {
+    el.style.display = "none"; 
     el.innerHTML = "";
     return;
   }
 
-  el.style.display = "block"; // Show if there are exams
-  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p>` + exams.map(exam => {
+  el.style.display = "block"; 
+  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p>` + filteredExams.map(exam => {
     const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
     const own = resultMap[exam.id];
     let actionHtml = "";
@@ -224,14 +242,17 @@ function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
     } else if (own?.status === "pending") {
       actionHtml = `<p class="text-xs text-muted mt-3 text-center">জমা দেওয়া হয়েছে — অনুমোদনের অপেক্ষায়।</p>`;
     } else if (exam.status === "published") {
-      actionHtml = `<a href="../student/exam.html?examId=${exam.id}" class="btn-glass mt-3" style="width:100%; background:var(--color-accent); color:#fff; border:none;">পরীক্ষা শুরু করুন</a>`;
+      actionHtml = `<a href="../student/exam.html?examId=${exam.id}" class="btn-glass mt-3" style="width:100%; background:var(--color-accent); color:#fff; border:none; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb),0.3);">পরীক্ষা শুরু করুন</a>`;
     }
+    
+    // স্পেশাল পরীক্ষা হলে ব্যাজ দেখাবে
+    const isSpecial = (exam.allowedStudents && exam.allowedStudents.length > 0);
 
     return `
-      <div class="glass-float-card mt-2">
+      <div class="glass-float-card mt-2" ${isSpecial ? 'style="border-color:var(--color-accent); background:rgba(var(--color-accent-rgb), 0.03);"' : ''}>
         <div class="flex justify-between items-center">
-          <h3 style="font-size:1.1rem; font-weight:800;">${exam.name}</h3>
-          <span class="badge badge-upcoming" style="background:rgba(37, 99, 235, 0.1); color:var(--color-accent);">${exam.status === "published" ? "প্রকাশিত" : "আসন্ন"}</span>
+          <h3 style="font-size:1.1rem; font-weight:900;">${exam.name}</h3>
+          <span class="badge" style="background:rgba(37, 99, 235, 0.1); color:var(--color-accent); font-weight:800;">${isSpecial ? "স্পেশাল এক্সাম" : (exam.status === "published" ? "প্রকাশিত" : "আসন্ন")}</span>
         </div>
         <div class="grid-2 mt-3 gap-2">
           <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">তারিখ</p><p class="text-sm font-bold">${dateStr || "—"}</p></div>
@@ -300,7 +321,10 @@ async function loadPerformanceAndLeaderboard() {
       getActiveStudents()
     ]);
     
-    const leaderboard = await getLeaderboardData(allStudents);
+    // Sort strictly by Total Points (XP)
+    let leaderboard = await getLeaderboardData(allStudents);
+    leaderboard = leaderboard.sort((a,b) => (Number(b.totalPoints) || 0) - (Number(a.totalPoints) || 0));
+
     const overall = computeOverallStats(results);
     const totalPoints = rank?.totalPoints || 0;
     const rankText = rank ? `${rank.rank} / ${rank.totalStudents}` : "—";
@@ -319,7 +343,7 @@ async function loadPerformanceAndLeaderboard() {
     let topScorerText = "";
     if (topScorer) {
       const isMeTop = topScorer.studentId === student.studentId;
-      topScorerText = `<div class="top-scorer-badge">শীর্ষস্থান: ${isMeTop ? "তুমি" : topScorer.name} (${topScorer.totalPoints} পয়েন্ট)</div>`;
+      topScorerText = `<div class="top-scorer-badge">শীর্ষস্থান: ${isMeTop ? "তুমি" : topScorer.name} (${topScorer.totalPoints} XP)</div>`;
     }
 
     const cleanTrophySvg = `
@@ -337,8 +361,8 @@ async function loadPerformanceAndLeaderboard() {
       <div class="hero-points-card">
         <div>
           <p style="font-size: 0.85rem; font-weight: 700; opacity: 0.85; margin-bottom: 2px;">সর্বমোট অর্জিত পয়েন্ট</p>
-          <h2 style="font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin: 0; letter-spacing: -1px;">
-            <span class="num" id="heroTotalPoints">0</span>
+          <h2 style="font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin: 0; letter-spacing: -1px; color:#a16207;">
+            <span class="num" id="heroTotalPoints">0</span> <span style="font-size:1.2rem;">XP</span>
           </h2>
           <p style="font-size: 0.8rem; font-weight: 700; opacity: 0.9; margin-top: 4px;">
             বর্তমান র‍্যাঙ্ক: <span style="font-family:var(--font-num);">${rankText}</span>
@@ -366,9 +390,9 @@ async function loadPerformanceAndLeaderboard() {
             <div class="point-list-row">
               <div class="flex items-center gap-2">
                 <span class="rank-number">${idx + 1}.</span>
-                <span style="font-size:0.9rem; font-weight:${s.studentId === student.studentId ? '800; color:var(--text-primary)' : '600; color:var(--text-secondary)'};">${s.name}${s.studentId === student.studentId ? ' (তুমি)' : ''}</span>
+                <span style="font-size:0.9rem; font-weight:${s.studentId === student.studentId ? '900; color:var(--color-accent)' : '600; color:var(--text-secondary)'};">${s.name}${s.studentId === student.studentId ? ' (তুমি)' : ''}</span>
               </div>
-              <span class="num" style="font-size:0.85rem; font-weight:800; color:var(--text-primary);">${s.totalPoints}</span>
+              <span class="num" style="font-size:0.9rem; font-weight:900; color:var(--text-primary);">${s.totalPoints} XP</span>
             </div>
           `).join("")}
           ${classStudents.length > 3 ? `<div style="text-align:center; margin-top:12px;"><a href="../student/leaderboard.html" class="btn-glass" style="font-size:0.75rem; padding:6px 12px; border-radius:6px; display:inline-block; width:auto;">সম্পূর্ণ তালিকা দেখুন</a></div>` : ''}
@@ -458,12 +482,7 @@ async function loadPerformanceAndLeaderboard() {
       : weakTopics.map(t => `
         <div class="glass-float-card weak-anim mt-3" style="border: 1px solid rgba(239, 68, 68, 0.2);">
           <div class="flex items-center gap-3">
-            <span class="icon-btn" style="color:var(--color-danger); background:rgba(239,68,68,0.1); border:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-  style="width:20px;height:20px;">
-  <path d="M12 3L2.8 20h18.4L12 3z"></path>
-  <path d="M12 9v5"></path>
-  <path d="M12 17h.01"></path>
-</svg></span>
+            <span class="icon-btn" style="color:var(--color-danger); background:rgba(239,68,68,0.1); border:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:20px;height:20px;"><path d="M12 3L2.8 20h18.4L12 3z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg></span>
             <div>
               <p style="font-weight:800; font-size:0.95rem;">${t.name ?? "—"}</p>
               <p class="text-xs text-muted mt-1">সঠিকতার হার মাত্র <span class="num" style="color:var(--color-danger); font-weight:700;">${t.accuracy}%</span></p>
