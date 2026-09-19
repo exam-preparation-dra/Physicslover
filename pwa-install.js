@@ -34,7 +34,7 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
   const btn = document.getElementById(installBtnId);
   const appShell = document.getElementById(appShellId);
 
-  // Check if app is opened from home screen (Standalone Mode)
+  // Check if app is opened from home screen
   const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
   
   if (isStandalone) {
@@ -47,6 +47,7 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
   }
 
   let promptFired = false;
+  let isInstallingAnimationRunning = false; // নতুন ফ্ল্যাগ যোগ করা হলো
 
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
@@ -58,7 +59,7 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
 
   btn.addEventListener("click", async () => {
     if (!deferredPrompt) {
-       alert("আপনার ব্রাউজারে অটোমেটিক ইনস্টল সাপোর্ট নেই বা আপনি আগেই পপ-আপ কেটে দিয়েছেন। পেজটি একবার রিলোড (Refresh) করে আবার চেষ্টা করুন।");
+       alert("আপনার ব্রাউজারে অটোমেটিক ইনস্টল সাপোর্ট নেই বা আপনি আগেই পপ-আপ কেটে দিয়েছেন। পেজটি একবার রিলোড করে আবার চেষ্টা করুন।");
        return;
     }
     
@@ -67,8 +68,9 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
     
     if (choiceResult.outcome === "accepted") { 
         deferredPrompt = null; 
+        isInstallingAnimationRunning = true; // অ্যানিমেশন শুরু হচ্ছে
         
-        // --- 15 Seconds Demo Progress Bar Animation ---
+        // --- 10 Seconds Demo Progress Bar Animation ---
         const installCard = document.querySelector('.install-card');
         installCard.innerHTML = `
           <div class="app-icon-placeholder" style="margin: 0 auto 20px; animation: pulse 1.5s infinite;">
@@ -82,7 +84,7 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary); font-weight: 700;">
               <span id="installProgressText">0%</span>
-              <span id="installTimeLeft">15 সেকেন্ড বাকি</span>
+              <span id="installTimeLeft">10 সেকেন্ড বাকি</span>
           </div>
         `;
 
@@ -91,27 +93,27 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
         const timeLeftText = document.getElementById('installTimeLeft');
 
         let progress = 0;
-        const totalTime = 15; // 15 seconds demo timer
+        const totalTime = 10; // ১০ সেকেন্ডের টাইমার সেট করা হলো
         let timeLeft = totalTime;
 
-        // Update every 150ms
+        // Update every 100ms
         const interval = setInterval(() => {
-            progress += (100 / (totalTime * (1000/150))); 
+            progress += (100 / (totalTime * (1000/100))); 
             if (progress >= 100) progress = 100;
 
             progressBar.style.width = `${progress}%`;
             progressText.innerText = `${Math.floor(progress)}%`;
 
-            // Calculate remaining seconds
             let sec = Math.ceil(totalTime - (progress / (100/totalTime)));
             if (sec < 0) sec = 0;
             timeLeftText.innerText = `${sec} সেকেন্ড বাকি`;
 
             if (progress >= 100) {
                 clearInterval(interval);
+                isInstallingAnimationRunning = false; // অ্যানিমেশন শেষ
                 showSuccessUI();
             }
-        }, 150);
+        }, 100);
 
     } else {
         deferredPrompt = null;
@@ -119,7 +121,13 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
     }
   });
 
-  // Function to show success message when progress reaches 100%
+  // ব্রাউজার ইনস্টল শেষ করলেও অ্যানিমেশন চলাকালীন সাকসেস মেসেজ আসবে না
+  window.addEventListener("appinstalled", () => {
+     if (!isInstallingAnimationRunning) {
+         showSuccessUI();
+     }
+  });
+
   function showSuccessUI() {
      overlay.innerHTML = `
        <div class="install-card">
@@ -136,7 +144,7 @@ export function initStudentMandatoryInstall(overlayId, installBtnId, appShellId)
      `;
   }
 
-  // Fallback: যদি ৩ সেকেন্ডের মধ্যে ব্রাউজার ইনস্টলের পারমিশন না দেয়
+  // Fallback
   setTimeout(() => {
     if(!promptFired) {
        btn.disabled = false;
